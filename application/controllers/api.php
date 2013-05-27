@@ -60,7 +60,7 @@ class Api extends CI_Controller
                             $result['sid'] = "";
                             $result['status'] = $this->config->item('fail'); //fail
                             $errors = $this->tank_auth->get_error_message();
-                            $result['error']=$errors['message'];  
+                            $result['error']="Error occured";  
                             //$result['status'] = $this->config->item('register_duplicate_umail'); // duplicate facebook id or mail or username
                     }
             }
@@ -116,8 +116,7 @@ class Api extends CI_Controller
                     $result['sid'] = "";
                     $result['status']=$this->config->item('fail'); 
                     $errors = $this->tank_auth->get_error_message();
-                    $result['error']=$errors['message'];  
-                
+                    $result['error']="Incorrect Username or Password";  
             }
             echo json_encode($result);
 	}
@@ -173,7 +172,7 @@ class Api extends CI_Controller
                     $result['sid'] = "";
                     $result['status'] = $this->config->item('fail'); 
                     $errors = $this->tank_auth->get_error_message();                         
-                    $result['error']=$errors['message'];
+                    $result['error']="Incorrect Username or Password";
               
             }
             echo json_encode($result);
@@ -242,7 +241,9 @@ class Api extends CI_Controller
                   $a_me=$_POST['a_me'];
                   $loc=$_POST['loc'];
                   $img_loc=$this->upload->file_name;
+                  
                   $this->users->update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$auser->username);
+//                  $this->users->del
                   $result['status'] = $this->config->item('success');
                   
             }

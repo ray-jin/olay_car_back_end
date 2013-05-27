@@ -406,11 +406,20 @@ class Users extends CI_Model
             if (!$this->get_profile_by_userid($uid))
                 $this->create_profile ($uid);
             
-             $pfid=$this->get_profile_by_userid($uid)->id; //get profileid;
+            $aprofile=$this->get_profile_by_userid($uid);
+            
+            $pfid=$aprofile->id; //get profileid;
             
             $this->db->set('user_id', $uid);
             $this->db->set('ufuname', $ufuname);
+            
+            //check whether delete the image file or not
+            if ($aprofile->image_loc){                
+                unlink($this->config->item('upload_path')."//".$aprofile->image_loc);
+            }
+            
             $this->db->set('image_loc', $username."//profile//".$img_loc);
+            
             $this->db->set('current_car', $c_car);
             $this->db->set('about_me', $a_me);
             $this->db->set('loc', $loc);
@@ -435,6 +444,8 @@ class Users extends CI_Model
 		$this->db->where('id', $user_id);
 		$this->db->update($this->table_name);
 	}
+        
+       
         
 	/**
 	 * Ban user

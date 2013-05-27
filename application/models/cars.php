@@ -217,6 +217,18 @@ class Cars extends CI_Model
 	}
         
         /**
+	 * Delete car images record
+	 *
+	 * @param	int
+	 * @return	void
+	 */
+        
+        function delete_car_imgs($car_id){
+             
+            $this->db->where('car_id', $car_id);
+            $this->db->delete($this->car_img_table_name);
+        }
+        /**
 	 * Delete car record
 	 *
 	 * @param	int
@@ -224,8 +236,18 @@ class Cars extends CI_Model
 	 */
 	function delete_car($car_id)
 	{
-		$this->db->where('id', $car_id);
-		$this->db->delete($this->table_name);
+            //delete car images before 
+            $urlArray=$this->list_car_img_loc($car_id);
+           
+            foreach ($urlArray as $img){                
+                
+                unlink($this->config->item('upload_path')."//".$img['img_loc']); //delete file
+            }
+            
+            $this->delete_car_imgs($car_id);
+            //
+            $this->db->where('id', $car_id);
+            $this->db->delete($this->table_name);
 	}
         
         /**

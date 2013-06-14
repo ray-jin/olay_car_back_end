@@ -37,6 +37,36 @@ class Cars extends CI_Model
             
 	}
 
+         function &get_object_list( $start=0, $count=1000, $search_option='') {
+
+		$strSql = "SELECT COUNT(*) AS cnt FROM $this->table_name";
+		$query = $this->db->query($strSql);		
+		$row = $query->row_array();
+		$return_arr['total'] = $row['cnt'];
+                $strSql = "SELECT * FROM $this->table_name WHERE 1=1 ORDER BY id DESC LIMIT $start, $count";
+                
+
+                $query = $this->db->query($strSql);
+		$return_arr['rows'] = $query->result_array();
+		
+		return $return_arr;
+	}
+        
+        function &_create_pagenation($per_page,$total,$base_url) {
+    	
+                $this->load->library('pagination');
+		$config['base_url'] = $base_url;
+		$config['page_query_string'] = TRUE;
+		$config['total_rows'] = $total;
+		$config['per_page'] = $per_page;
+		$config['full_tag_open'] = "<div style='padding:8px;'>";
+		$config['full_tag_close'] = "</div>";
+		
+		$this->pagination->initialize($config); 
+		$pagenation = $this->pagination->create_links();
+			
+		return $pagenation;
+    }
 	/**
 	 * Get car record by Id
 	 *
@@ -50,6 +80,15 @@ class Cars extends CI_Model
 
                 if ($query->num_rows() == 1) return $query->row();
 		return NULL;
+	}
+        
+        function &get_specific_data($idx) {
+            
+            $strSql = "SELECT * FROM cars WHERE id='$idx'";
+            
+            $query = $this->db->query($strSql);
+            $row = $query->row_array();
+            return $row;
 	}
         
         /**
@@ -99,14 +138,16 @@ class Cars extends CI_Model
             $this->db->set('registration', $registration);
             $this ->db->set('created',date('Y-m-d H:i:s'));
             $this->db->set('price', $price);
-                
-            if ($this->db->insert($this->table_name)) {
-                   $car_id = $this->db->insert_id();
-                   $nimg_loc_array=$this->create_car_img_loc($img_loc_array, $car_id,$username);
-                   
-                   return $car_id;
+            $i=1;    
+            foreach ($img_loc_array as $value) {
+              $this->db->set('car_img_url_'.$i, $username."//cars//".$value);
+              $i++;              
             }
-            
+             
+            if ($this->db->insert($this->table_name)) {
+                   $car_id = $this->db->insert_id();                   
+                   return $car_id;
+            }            
             return -1;
 	}
         
@@ -216,18 +257,7 @@ class Cars extends CI_Model
 		return $this->db->affected_rows() > 0;
 	}
         
-        /**
-	 * Delete car images record
-	 *
-	 * @param	int
-	 * @return	void
-	 */
-        
-        function delete_car_imgs($car_id){
-             
-            $this->db->where('car_id', $car_id);
-            $this->db->delete($this->car_img_table_name);
-        }
+       
         /**
 	 * Delete car record
 	 *
@@ -236,16 +266,15 @@ class Cars extends CI_Model
 	 */
 	function delete_car($car_id)
 	{
-            //delete car images before 
-            $urlArray=$this->list_car_img_loc($car_id);
-           
-            foreach ($urlArray as $img){                
-                
-                unlink($this->config->item('upload_path')."//".$img['img_loc']); //delete file
-            }
+            $car=$this->get_specific_data($car_id);
             
-            $this->delete_car_imgs($car_id);
-            //
+            for ($i=1; $i<=5; $i++){                
+                
+                $tmp=UPLOAD_PATH."/".$car['car_img_url_'.$i];
+                if (file_exists($tmp))
+                    unlink($tmp); //delete physical image file
+                                
+            }            
             $this->db->where('id', $car_id);
             $this->db->delete($this->table_name);
 	}
@@ -263,7 +292,7 @@ class Cars extends CI_Model
             $this->db->set('uid', $uid);
             
             if ($this->db->insert($this->watch_car_table_name)) {
-                   $watch_id = $this->db->insert_id();                          
+                   $watch_id = $this->db->insert_id();
                    return $watch_id;
             }
             

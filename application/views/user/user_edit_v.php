@@ -74,6 +74,7 @@
 		echo form_error($femail['name']);
 		echo form_error($fpassword['name']);
                 echo form_error($fusername['name']);
+                echo form_error('cfpassword');
                 
 		if (isset($show_errors)) {?>
                     <h4 class="alert_error">
@@ -102,16 +103,17 @@
 	</fieldset>
     <fieldset >
 		<label>Password</label>
-		<input type="password" name="<?php echo $fpassword['name']; ?>" value="<?php echo $post['password'] ?>"/>		
-	</fieldset>
+		<input type="password" name="<?php echo $fpassword['name']; ?>" value=""/>
+    </fieldset>
+    <fieldset >
+		<label>Password (Confirm)</label>
+		<input type="password" name="c<?php echo $fpassword['name']; ?>" value=""/>
+    </fieldset>
     <fieldset >
 		<label>Phone</label>
 		<input type="text" name="<?php echo $fphone['name']; ?>" value="<?php echo $post['phone'] ?>"/>		
 	</fieldset>
-    <fieldset >
-		<label>Location</label>
-		<input type="text" name="<?php echo $floc['name']; ?>" value="<?php echo $post['loc'] ?>"/>		
-	</fieldset>
+   
   <!--  <fieldset >
 		<label>Type</label>
 		<input type="text" name="<?php echo $ftype['name']; ?>" value="<?php echo $post['type'] ?>"/>		
@@ -129,11 +131,14 @@
 <footer>
 	<div class="submit_link">            
             banned<input type="checkbox" name="<?php echo $fbanned['name']; ?>" class="banuser" <?php if ($post['banned']=='1') echo "checked";?>>
-            <input type="submit" value="Update" class="alt_btn"> <input type="button" value="Cancel" class="alt_btn" onclick="javascript:window.history.back();"> 
+            <input type="submit" value="Update" class="alt_btn"> <input type="button" value="Cancel" class="alt_btn" onclick="javascript:goUsersList();"> 
 	</div>
 </footer>
 <?php echo form_close(); ?>
 
 </article>
-
-
+<script>
+    function goUsersList(){
+        window.location.href="<?php echo site_url('admin/user'); ?>";
+    }
+</script>

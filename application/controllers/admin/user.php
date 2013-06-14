@@ -51,7 +51,7 @@ class User extends CI_Controller
 	}
 		
 	function user_edit() {		
-		$post_id = $this->uri->segment(3, 0);
+		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
 			return;
@@ -64,14 +64,21 @@ class User extends CI_Controller
 	}
 		
 	function user_del() {
-		$post_id = $this->uri->segment(3, 0);
-		if (empty($post_id)) {
-			echo "select task!";
-			return;
-		}
-		$this->_proc_post_del($post_id);
-		
-		redirect("user");
+            $post_id = $this->uri->segment(4, 0);
+            if (empty($post_id)) {
+                    echo "select task!";
+                    return;
+            }
+            $user=$this->users->get_user_by_id($post_id);
+            if ($user->level==0){
+                $this->users->delete_user($post_id);
+            }
+            else{
+                echo "You can not delete adminstrator!";
+                 return;
+            }
+
+            redirect("admin/user");
 	}
 	
 	private function &_proc_post_add() {
@@ -112,17 +119,13 @@ class User extends CI_Controller
 							'username'  => $this->input->post('fusername'),
 							'email'		=> $this->input->post('femail'),
 							'password'	=> $hashed_password,
-							'phone'		=> $this->input->post('fphone'),
-							'loc'	=> $this->input->post('floc'),
-							'type'		=> $this->input->post('ftype'),
-							'verified_pt' => $this->input->post('fverified'),
-							'donated_pt'  => $this->input->post('fdonated')
+							'phone'		=> $this->input->post('fphone'),							
 						)
 					);
 					
 					if($this->db->insert($tbl_name, $qry)){
 					//	$data['show_message'] = "Successfully added!";
-						redirect("user");
+						redirect("admin/user");
 					}
 				}
 			}			
@@ -136,8 +139,8 @@ class User extends CI_Controller
     	             
         $this->form_validation->set_rules('femail', 'Email', 'trim|required|valid_email|xss_clean');
         $this->form_validation->set_rules('fusername', 'UserName', 'trim|required|xss_clean');            
-        $this->form_validation->set_rules('fpassword', 'Password', 'trim');
-		
+        $this->form_validation->set_rules('fpassword', 'Password', 'trim|required');
+	$this->form_validation->set_rules('cfpassword', 'Confirm Password', 'trim|required');	
 		$qry = array();
 		$data = array();
 		
@@ -148,6 +151,11 @@ class User extends CI_Controller
                     if( !$this->manage_m->confrim_email($this->input->post('femail'),$suffix ))
                     {
                             $data['show_errors'] = $this->config->item('duplicate_mail');
+                            return $data;
+                    }
+                    if( $this->input->post('fpassword')!=$this->input->post('cfpassword'))
+                    {
+                            $data['show_errors'] = "Passwords should be match";
                             return $data;
                     }
 			$tbl_name = "users";	
@@ -169,11 +177,9 @@ class User extends CI_Controller
 						'email'		=> $this->input->post('femail'),
 						'password'	=> $hashed_password,
 						'phone'		=> $this->input->post('fphone'),
-						'loc'	=> $this->input->post('floc'),
                                                 'banned'	=> $fbanned,
 						'type'		=> $this->input->post('ftype'),
 						'verified_pt' => $this->input->post('fverified'),
-						'donated_pt'  => $this->input->post('fdonated')			
 					)
 				);
 				

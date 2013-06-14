@@ -40,7 +40,7 @@ class Messages extends CI_Model
 	
 	function &_create_pagenation($per_page,$total,$base_url) {
     	
-    	$this->load->library('pagination');
+                $this->load->library('pagination');
 		$config['base_url'] = $base_url;
 		$config['page_query_string'] = TRUE;
 		$config['total_rows'] = $total;

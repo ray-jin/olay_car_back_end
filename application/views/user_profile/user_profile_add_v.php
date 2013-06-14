@@ -34,6 +34,12 @@
 		'value' => set_value('fphone'),
 		'title'	=> 'Phone',
 	);
+	$fcountry = array(	//input field
+		'name'	=> 'floc',
+		'id'	=> 'floc',
+		'value' => set_value('floc'),
+		'title'	=> 'floc',
+	);
 	$ftype = array(	//input field
 		'name'	=> 'ftype',
 		'id'	=> 'ftype',
@@ -97,7 +103,24 @@
     <fieldset >
 		<label>Phone</label>
 		<input type="text" name="<?php echo $fphone['name']; ?>" />		
-	</fieldset>	
+	</fieldset>
+    <fieldset >
+		<label>Location</label>
+		<input type="text" name="<?php echo $fcountry['name']; ?>" />		
+	</fieldset>
+   <!--   <fieldset >
+		<label>Type</label>
+		<input type="text" name="<?php echo $ftype['name']; ?>" />		
+	</fieldset>
+    <fieldset >
+		<label>Verified Pt</label>
+		<input type="text" name="<?php echo $fverified['name']; ?>" />		
+	</fieldset>
+    <fieldset >
+		<label>Donated Pt</label>
+		<input type="text" name="<?php echo $fdonated['name']; ?>" />		
+	</fieldset>-->
+	
 </div>
 
 <footer>

@@ -41,11 +41,7 @@
 
 });
     </script>
-    <script type="text/javascript">
-    $(function(){
-        $('.column').equalHeight();
-    });
-</script>
+   
 
 </head>
 
@@ -61,20 +57,27 @@
 	</header> <!-- end of header bar -->
 	
 	<section id="secondary_bar">
-		<div class="user">
-<?php
-	if($this->tank_auth->is_logged_in())  {
-		echo "<p>".$this->tank_auth->get_username()."</p>";
-	}
-?>
-		</div>
+        <?php
+                if($this->tank_auth->is_logged_in())  {
+
+                    echo "<div class='user'>";
+                    echo "<p>".$this->tank_auth->get_username()."</p>";
+                    echo "</div>";    
+                }
+        ?>
 		<div class="breadcrumbs_container">
 		</div>
 	</section><!-- end of secondary bar -->
 
 <?php
-	require ("sidebar_v.php");
+	  $str ="";
+       if($this->tank_auth->is_logged_in())  {
+		require ("sidebar_v.php");
+	}
+        else{
+            $str=" style='width:100%;' ";
+        }
 ?>
 
-	<section id="main" class="column">
+	<section id="main" class="column" <?php echo $str; ?>>
 		

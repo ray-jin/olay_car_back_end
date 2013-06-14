@@ -31,7 +31,7 @@ class Users extends CI_Model
 	 * @param	bool
 	 * @return	object
 	 */
-	function get_user_by_id($user_id, $activated)
+	function get_user_by_id($user_id, $activated=1)
 	{
 		$this->db->where('id', $user_id);
 		$this->db->where('activated', $activated ? 1 : 0);
@@ -46,7 +46,7 @@ class Users extends CI_Model
 	 *
 	 * @param	string
 	 * @return	object
-	 */
+	 */ 
 	function get_user_by_login($login)
 	{
 		$this->db->where('LOWER(username)=', strtolower($login));
@@ -228,13 +228,15 @@ class Users extends CI_Model
 	 */
 	function delete_user($user_id)
 	{
-		$this->db->where('id', $user_id);
-		$this->db->delete($this->table_name);
-		if ($this->db->affected_rows() > 0) {
-			$this->delete_profile($user_id);
-			return TRUE;
-		}
-		return FALSE;
+            
+           $this->delete_profile($user_id); 
+            if ($this->db->affected_rows() > 0) {
+                     $this->db->where('id', $user_id);
+                    $this->db->delete($this->table_name);
+                    return TRUE;
+            }
+            
+            return FALSE;
 	}
 
 	/**
@@ -401,7 +403,7 @@ class Users extends CI_Model
 	 * @return	void
 	 */
         
-	function update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$username)
+	function update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$username,$img_del=true)
 	{
             if (!$this->get_profile_by_userid($uid))
                 $this->create_profile ($uid);
@@ -414,12 +416,14 @@ class Users extends CI_Model
             $this->db->set('ufuname', $ufuname);
             
             //check whether delete the image file or not
-            if ($aprofile->image_loc){                
-                unlink($this->config->item('upload_path')."//".$aprofile->image_loc);
+            
+            if ($img_del==true && $aprofile->image_loc){ 
+                 $tmp=UPLOAD_PATH."/".$aprofile->image_loc;
+                if (file_exists($tmp))
+                    unlink($tmp); //delete physical image file
+                
             }
-            
-            $this->db->set('image_loc', $username."//profile//".$img_loc);
-            
+            $this->db->set('image_loc', $img_loc);
             $this->db->set('current_car', $c_car);
             $this->db->set('about_me', $a_me);
             $this->db->set('loc', $loc);
@@ -511,10 +515,19 @@ class Users extends CI_Model
 	 * @return	void
 	 */
 	private function delete_profile($user_id)
-	{
-		$this->db->where('user_id', $user_id);
-		$this->db->delete($this->profile_table_name);
+	{   
+            $user=$this->get_user_by_id($user_id);
+            
+            $user_profile=$this->get_profile_by_userid($user_id);
+            
+            $this->load->helper("file"); // load the helper
+            delete_files(UPLOAD_PATH."/".$user->username, true);
+            rmdir(UPLOAD_PATH."/".$user->username);
+            $this->db->where('user_id', $user_id);
+            $this->db->delete($this->profile_table_name);
 	}
+        
+        
 }
 
 /* End of file users.php */

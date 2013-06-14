@@ -28,9 +28,9 @@ class Car extends CI_Controller
          * @a_me : userfile[5]: array         
          */
 	function add_listing() {
-            
-            $config['upload_path'] = $this->config->item('upload_path');
-            
+             
+           $config['upload_path'] = UPLOAD_PATH; 
+           
             $config['allowed_types'] = 'gif|jpg|png';
             $config['max_size']	= $this->config->item('max_img_size'); //2MB
                         

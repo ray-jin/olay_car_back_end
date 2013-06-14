@@ -2,11 +2,13 @@
 
 	
 	$config['main_category'] = array(
-		'user'	=>	'Users',	
-                'backend\bcar'	=>	'Cars',
-                'backend\bmessage'	=>	'Messages',
-                'backend\boffer'	=>	'Offers',
-                'backend\bcomment'	=>	'Comments',
+		'admin\user'	=>	'Users',	
+                'admin\user_profile'	=>	'User Profile',
+                'admin\car'	=>	'Cars',
+                'admin\message'	=>	'Messages',
+                'admin\offer'	=>	'Offers',
+                'admin\comment'	=>	'Comments',
+                
 	);
         $config['max_count_per_page'] = 10;	
         $config['duplicate_mail'] = "Email address already exist";
@@ -23,8 +25,10 @@
         $config['login_incorrect_fname_umail']="3";
         $config['max_img_size']=2048; //2MB;
         $config['invalid_session']="Invalid session"; 
-        $config['upload_path']="uploads";
         $config['failed']="Failed";
         $config['unknown_error']="unknow error";
         $config['not_exist']="does not exist";
         
+        define ('HOST',"http://192.168.180.90/cars/");
+        define('UPLOAD_PATH', 'uploads/');
+        define('ADMIN_USER_ID',1);

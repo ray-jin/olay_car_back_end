@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-class Bmessage extends CI_Controller
+class Offer extends CI_Controller
 {
 	function __construct()
 	{
@@ -8,7 +8,7 @@ class Bmessage extends CI_Controller
 
 		$this->load->library('security');
 		$this->load->library('tank_auth');
-		$this->load->model('messages');
+		$this->load->model('offers');
                 $this->load->helper('url');
                 $this->load->library('form_validation');
                 
@@ -25,17 +25,17 @@ class Bmessage extends CI_Controller
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
 
-		$result = $this->messages->get_object_list($start_no,$per_page);
+		$result = $this->offers->get_object_list($start_no,$per_page);
 		$total_page = $result['total'];
-		$data['message_list'] = $result['rows'];
+		$data['offer_list'] = $result['rows'];
 		
-		$base_url = site_url("backend/bmessage?a=1");
-		$data['pagenation'] = $this->messages->_create_pagenation($per_page, $total_page, $base_url);
-		$data['post_key'] = "bmessage";
-		$this->load->view('bmessage/bmessage_list_v',$data);	
+		$base_url = site_url("backend/boffer?a=1");
+		$data['pagenation'] = $this->offers->_create_pagenation($per_page, $total_page, $base_url);
+		$data['post_key'] = "boffer";
+		$this->load->view('boffer/boffer_list_v',$data);	
 	}
         
-        function bmessage_del() {
+        function boffer_del() {
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
@@ -43,34 +43,34 @@ class Bmessage extends CI_Controller
 		}
 		$this->_proc_post_del($post_id);
 		
-		redirect("backend\bmessage");
+		redirect("backend\boffer");
 	}
 	
-        function bmessage_add() {
+        function boffer_add() {
 		$data = $this->_proc_post_add();
-		$data['post_key'] = "bmessage";
-		$this->load->view('bmessage/bmessage_add_v', $data);
+		$data['post_key'] = "boffer";
+		$this->load->view('boffer/boffer_add_v', $data);
 	}
         
-       function bmessage_edit() {		
+       function boffer_edit() {		
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
-			echo "select message!";
+			echo "select offer!";
 			return;
 		}
 		
 		$data = $this->_proc_post_edit($post_id);
-		$data['post_key'] = "bmessage";	
-		$data['post'] = $this->messages->get_specific_data($post_id);
-		$this->load->view('bmessage/bmessage_edit_v', $data);
+		$data['post_key'] = "boffer";	
+		$data['post'] = $this->offers->get_specific_data($post_id);
+		$this->load->view('boffer/boffer_edit_v', $data);
 	}
         
         private function &_proc_post_add() {
 		$this->load->library('upload');
 		
-		$this->form_validation->set_rules('sender_id', 'Sender ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('receiver_id', 'Receiver ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('message', 'message', 'trim|required|xss_clean');                
+		$this->form_validation->set_rules('uid', 'User ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('cid', 'Car ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('price', 'price', 'is_natural|numeric|trim|required|xss_clean');                
 		
 		$qry = array();
 		$data = array();
@@ -78,8 +78,8 @@ class Bmessage extends CI_Controller
 		if ($this->form_validation->run())
 		{
 					
-			$tbl_name = "message_cars";
-			$new_idx = $this->messages->get_next_insert_idx($tbl_name);
+			$tbl_name = "offer_cars";
+			$new_idx = $this->offers->get_next_insert_idx($tbl_name);
 		
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
 			
@@ -87,8 +87,9 @@ class Bmessage extends CI_Controller
                                         $qry,
                                         array(
                                                 'id'		=> $new_idx,						
-                                                'sender_id'  => $this->input->post('sender_id'),
-                                                'receiver_id'	=> $this->input->post('receiver_id'),                                                
+                                                'uid'  => $this->input->post('uid'),
+                                                'cid'	=> $this->input->post('cid'),
+                                                'price'	=> $this->input->post('price'),
                                                 'message'=> $this->input->post('message'),
                                                 'created' =>  date('Y-m-d H:i:s')
                                         )
@@ -96,7 +97,7 @@ class Bmessage extends CI_Controller
 
                                 if($this->db->insert($tbl_name, $qry)){
                                 //	$data['show_message'] = "Successfully added!";
-                                        redirect("backend/bmessage");
+                                        redirect("backend/boffer");
                                 }
 
 			}			
@@ -109,9 +110,9 @@ class Bmessage extends CI_Controller
     
        		$this->load->library('upload');
     	             
-                $this->form_validation->set_rules('sender_id', 'Sender ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('receiver_id', 'Receiver ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('message', 'message', 'trim|required|xss_clean');
+                $this->form_validation->set_rules('uid', 'User ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('cid', 'Car ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('price', 'Price', 'is_natural|numeric|trim|required|xss_clean');
                 
                 
 
@@ -121,7 +122,7 @@ class Bmessage extends CI_Controller
 		if ($this->form_validation->run())
 		{	
                 
-                    $tbl_name = "message_cars";	
+                    $tbl_name = "offer_cars";	
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
 				
 
@@ -130,8 +131,9 @@ class Bmessage extends CI_Controller
 					$qry,
 					array(
 						'id'		=> $new_idx,
-						'sender_id'  => $this->input->post('sender_id'),
-						'receiver_id'=> $this->input->post('receiver_id'),
+						'cid'  => $this->input->post('cid'),
+						'uid'		=> $this->input->post('uid'),
+                                                'price' => $this->input->post('price'),
 						'message'	=> $this->input->post('message')
 					)
 				);
@@ -149,7 +151,7 @@ class Bmessage extends CI_Controller
     } //end function
     
     private function _proc_post_del($idx) {    	
-            $strSql = "DELETE FROM message_cars WHERE id='$idx' ";
+            $strSql = "DELETE FROM offer_cars WHERE id='$idx' ";
             $this->db->query($strSql);
     }
 }

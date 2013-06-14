@@ -11,7 +11,7 @@ class Manage_m extends CI_Model
 		if ($tbl_name != "users")
 			$strSql = "SELECT * FROM $tbl_name WHERE 1=1 ORDER BY nID DESC LIMIT $start, $count";
 		else
-			$strSql = "SELECT * FROM $tbl_name WHERE 1=1 ORDER BY id DESC LIMIT $start, $count";
+			$strSql = "SELECT * FROM $tbl_name WHERE 1=1 ORDER BY id  LIMIT $start, $count";
 		$query = $this->db->query($strSql);
 		$return_arr['rows'] = $query->result_array();
 		
@@ -19,9 +19,7 @@ class Manage_m extends CI_Model
 	}
 	
 	function &get_specific_data($idx, $tbl_name) {
-            if ($tbl_name != "users") 
-                    $strSql = "SELECT * FROM $tbl_name WHERE nID='$idx'";
-            else 
+            
                     $strSql = "SELECT * FROM $tbl_name WHERE id='$idx'";
             $query = $this->db->query($strSql);
             $row = $query->row_array();

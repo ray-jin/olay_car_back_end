@@ -24,18 +24,6 @@ $level = array(
         'id'   => 'password',
         'size' => 30,
 );
-$remember = array(
-	'name'	=> 'remember',
-	'id'	=> 'remember',
-	'value'	=> 1,
-	'checked'	=> set_value('remember'),
-	'style' => 'margin:0;padding:0',
-);
-$captcha = array(
-	'name'	=> 'captcha',
-	'id'	=> 'captcha',
-	'maxlength'	=> 8,
-);
 ?>
 <?php echo form_open($this->uri->uri_string()); ?>
 <div class="loginDiv">
@@ -112,17 +100,17 @@ $captcha = array(
                 </tr>
                 <?php }
                 } ?>
-
                 <tr>
-                        <td colspan="3">
-                                <?php echo form_checkbox($remember); ?>
-                                <?php echo form_label('Remember me', $remember['id']); ?>
-                                <?php echo anchor('/auth/forgot_password/', 'Forgot password'); ?>
-                                <?php if ($this->config->item('allow_registration', 'tank_auth')) echo anchor('/auth/register/', 'Register'); ?>
-                        </td>
+                    <td>
+                        <?php echo form_submit('submit', 'Login'); ?>
+                    </td>
+                    <td colspan="1">
+                            <?php echo anchor('/auth/forgot_password/', 'Forgot password'); ?>
+                    </td>
                 </tr>
+
         </table>
-        <?php echo form_submit('submit', 'Let me in'); ?>
+       
     </div>
 </div>
 <?php echo form_close(); ?>

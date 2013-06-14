@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-class Bcomment extends CI_Controller
+class Message extends CI_Controller
 {
 	function __construct()
 	{
@@ -8,7 +8,7 @@ class Bcomment extends CI_Controller
 
 		$this->load->library('security');
 		$this->load->library('tank_auth');
-		$this->load->model('comments');
+		$this->load->model('messages');
                 $this->load->helper('url');
                 $this->load->library('form_validation');
                 
@@ -25,17 +25,17 @@ class Bcomment extends CI_Controller
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
 
-		$result = $this->comments->get_object_list($start_no,$per_page);
+		$result = $this->messages->get_object_list($start_no,$per_page);
 		$total_page = $result['total'];
-		$data['comment_list'] = $result['rows'];
+		$data['message_list'] = $result['rows'];
 		
-		$base_url = site_url("backend/bcomment?a=1");
-		$data['pagenation'] = $this->comments->_create_pagenation($per_page, $total_page, $base_url);
-		$data['post_key'] = "bcomment";
-		$this->load->view('bcomment/bcomment_list_v',$data);	
+		$base_url = site_url("backend/bmessage?a=1");
+		$data['pagenation'] = $this->messages->_create_pagenation($per_page, $total_page, $base_url);
+		$data['post_key'] = "bmessage";
+		$this->load->view('bmessage/bmessage_list_v',$data);	
 	}
         
-        function bcomment_del() {
+        function bmessage_del() {
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
@@ -43,35 +43,34 @@ class Bcomment extends CI_Controller
 		}
 		$this->_proc_post_del($post_id);
 		
-		redirect("backend\bcomment");
+		redirect("backend\bmessage");
 	}
 	
-        function bcomment_add() {
+        function bmessage_add() {
 		$data = $this->_proc_post_add();
-		$data['post_key'] = "bcomment";
-		$this->load->view('bcomment/bcomment_add_v', $data);
+		$data['post_key'] = "bmessage";
+		$this->load->view('bmessage/bmessage_add_v', $data);
 	}
         
-       function bcomment_edit() {		
+       function bmessage_edit() {		
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
-			echo "select comment!";
+			echo "select message!";
 			return;
 		}
 		
 		$data = $this->_proc_post_edit($post_id);
-		$data['post_key'] = "bcomment";	
-		$data['post'] = $this->comments->get_specific_data($post_id);
-		$this->load->view('bcomment/bcomment_edit_v', $data);
+		$data['post_key'] = "bmessage";	
+		$data['post'] = $this->messages->get_specific_data($post_id);
+		$this->load->view('bmessage/bmessage_edit_v', $data);
 	}
         
         private function &_proc_post_add() {
 		$this->load->library('upload');
 		
-		$this->form_validation->set_rules('uid', 'User ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('cid', 'Car ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('comment', 'Comment', 'trim|required|xss_clean');
-                
+		$this->form_validation->set_rules('sender_id', 'Sender ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('receiver_id', 'Receiver ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('message', 'message', 'trim|required|xss_clean');                
 		
 		$qry = array();
 		$data = array();
@@ -79,27 +78,27 @@ class Bcomment extends CI_Controller
 		if ($this->form_validation->run())
 		{
 					
-			$tbl_name = "comment_cars";
-			$new_idx = $this->comments->get_next_insert_idx($tbl_name);
+			$tbl_name = "message_cars";
+			$new_idx = $this->messages->get_next_insert_idx($tbl_name);
 		
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
-				
-					
+			
                                 $qry = array_merge(	
                                         $qry,
                                         array(
                                                 'id'		=> $new_idx,						
-                                                'uid'  => $this->input->post('uid'),
-                                                'cid'		=> $this->input->post('cid'),							
-                                                'comment'		=> $this->input->post('comment')							
+                                                'sender_id'  => $this->input->post('sender_id'),
+                                                'receiver_id'	=> $this->input->post('receiver_id'),                                                
+                                                'message'=> $this->input->post('message'),
+                                                'created' =>  date('Y-m-d H:i:s')
                                         )
                                 );
 
                                 if($this->db->insert($tbl_name, $qry)){
                                 //	$data['show_message'] = "Successfully added!";
-                                        redirect("backend/bcomment");
+                                        redirect("backend/bmessage");
                                 }
-				
+
 			}			
 		}//end run
 		
@@ -110,19 +109,19 @@ class Bcomment extends CI_Controller
     
        		$this->load->library('upload');
     	             
-                $this->form_validation->set_rules('uid', 'User ID', 'trim|required|integer');
-                $this->form_validation->set_rules('cid', 'Car ID', 'trim|required|integer');
-                //$this->form_validation->set_rules('uid', 'User ID', 'trim|required|integer');
-                //$this->form_validation->set_rules('fpassword', 'Password', 'trim');
+                $this->form_validation->set_rules('sender_id', 'Sender ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('receiver_id', 'Receiver ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('message', 'message', 'trim|required|xss_clean');
+                
+                
 
                 $qry = array();
 		$data = array();
 		
 		if ($this->form_validation->run())
 		{	
-                    
-                                                
-			$tbl_name = "comment_cars";	
+                
+                    $tbl_name = "message_cars";	
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
 				
 
@@ -131,9 +130,9 @@ class Bcomment extends CI_Controller
 					$qry,
 					array(
 						'id'		=> $new_idx,
-						'cid'  => $this->input->post('cid'),
-						'uid'		=> $this->input->post('uid'),
-						'comment'	=> $this->input->post('comment')						
+						'sender_id'  => $this->input->post('sender_id'),
+						'receiver_id'=> $this->input->post('receiver_id'),
+						'message'	=> $this->input->post('message')
 					)
 				);
 				
@@ -150,7 +149,7 @@ class Bcomment extends CI_Controller
     } //end function
     
     private function _proc_post_del($idx) {    	
-            $strSql = "DELETE FROM comment_cars WHERE id='$idx' ";
+            $strSql = "DELETE FROM message_cars WHERE id='$idx' ";
             $this->db->query($strSql);
     }
 }

@@ -6,7 +6,7 @@ $f_search = array(	//text field
 
 <article class="module width_full">
     <header>
-        <h3 class="tabs_involved"> Message List </h3>
+        <h3 class="tabs_involved"> Car List </h3>
         <div class="submit_link">
            <input type="submit" value="Add" class="alt_btn" onclick="return post_add()" />
         </div>
@@ -18,7 +18,9 @@ $f_search = array(	//text field
                 <tr>
                     <th width="30">No.</th>
                     <th width="30">Car ID</th>
-                    <th width="100">User ID </th>
+                    <th width="100">User Name</th>
+                    <th width="100">Image</th>
+                    <th width="80">Reg</th>
                     <th width="100">Activated</th>                    
                     <th width="100">Make</th>
                     <th width="100">Transmission</th>
@@ -35,13 +37,11 @@ $f_search = array(	//text field
                     <th width="80">Mileageunits</th>
                     <th width="80">Model</th>
                     <th width="80">Number of Doors</th>
-                    <th width="80">Number of Owners</th>
                     <th width="80">Car Options</th>
                     <th width="80">PostCode</th>
                     <th width="80">Price</th>
                     <th width="80">Purchase Type</th>
-                    <th width="80">Region</th>
-                    <th width="80">Registration</th>
+                    <th width="80">Region</th>                    
                     <th width="80">Roadtax</th>
                     <th width="80">Sales Type</th>
                     <th width="80">Tested Until</th>
@@ -51,17 +51,27 @@ $f_search = array(	//text field
                     <th width="80">Year</th>
                     <th width="80">Created</th>
                     <th width="80">Modified</th>
+                    <th width="80">Action</th>
                 </tr>
              </thead>
              <tbody>
             <?php
             $i = 1;
-            foreach($car_list as $row) {	                                                
+            foreach($car_list as $row) {
+                $user=$this->manage_m->get_specific_data($row['uid'], "users");
             ?>
                 <tr>				
-                    <td><?php echo $i; //$row['id'];?></td>
+                     <td><?php echo $i+$start_no ; ?></td>
                     <td><?php echo $row['id'];?></td>
-                    <td><?php echo $row['uid'];?></td>
+                    <td><?php echo $user['username'];?></td>
+                     <td>
+                        <?php if ($row['car_img_url_1']): ?>
+                            <img src="<?php echo HOST.UPLOAD_PATH.$row['car_img_url_1'];?>" alt="No Image" height="80" width="80">
+                        <?php else: ?>
+                            <div style='color:red'> No Image </div>
+                        <?php endif ?>
+                    </td>
+                    <td><?php echo $row['registration'];?></td>
                     <td><?php echo $row['activated'];?></td>
                     <td><?php echo $row['make'];?></td>
                     <td><?php echo $row['transmission'];?></td>
@@ -77,14 +87,12 @@ $f_search = array(	//text field
                     <td><?php echo $row['mileage'];?></td>
                     <td><?php echo $row['mileageunits'];?></td>
                     <td><?php echo $row['model'];?></td>
-                    <td><?php echo $row['num_doors'];?></td>  
-                    <td><?php echo $row['num_owners'];?></td>
+                    <td><?php echo $row['num_doors'];?></td>                      
                     <td><?php echo $row['car_options'];?></td>
                     <td><?php echo $row['postcode'];?></td>
                     <td><?php echo $row['price'];?></td>
                     <td><?php echo $row['purchase_type'];?></td>
                     <td><?php echo $row['region'];?></td>
-                    <td><?php echo $row['registration'];?></td>
                     <td><?php echo $row['roadtax'];?></td>
                     <td><?php echo $row['sales_type'];?></td>
                     <td><?php echo $row['tested_until'];?></td>
@@ -113,17 +121,17 @@ $f_search = array(	//text field
 
     <script type="text/javascript">
             function post_add() {
-                    window.location.href = "<?php echo site_url("backend/"."$post_key"."/".$post_key."_add"); ?>";
+                    window.location.href = "<?php echo site_url("admin/"."$post_key"."/".$post_key."_add"); ?>";
                     return false;
             }
             function confirm_del(pid) {
                     if(!confirm('Are you sure to delete?')) {
                             return;
                     }
-                    window.location.href = "<?php echo site_url("backend/"."$post_key"."/".$post_key."_del"); ?>/" + pid;
+                    window.location.href = "<?php echo site_url("admin/"."$post_key"."/".$post_key."_del"); ?>/" + pid;
             }
             function goedit(pid) {
-                    window.location.href = "<?php echo site_url("backend/"."$post_key"."/".$post_key."_edit"); ?>/" + pid;
+                    window.location.href = "<?php echo site_url("admin/"."$post_key"."/".$post_key."_edit"); ?>/" + pid;
             }
     </script>
 

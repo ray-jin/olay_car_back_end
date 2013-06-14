@@ -9,6 +9,6 @@
     define('IMG_DIR',$base_url.'include/images');
     define('CSS_DIR', $base_url.'include/css');
     define ('JS_DIR',$base_url.'include/js');
-    define('SITE_NAME','Olay Admin');
+    define('SITE_NAME','Cars Backend');
     
 

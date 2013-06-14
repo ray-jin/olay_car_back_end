@@ -8,5 +8,9 @@
 		</p>
 	</section>
 </body>
-
+    <script type="text/javascript">
+        $(function(){
+            $('.column').equalHeight();
+        });
+    </script>
 </html>

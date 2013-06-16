@@ -135,7 +135,7 @@ class Car extends CI_Controller
          * @cid : car id  
          */
          function remove_car() {    	
-            if (!isset($_GET['uid']) || !isset($_GET['sid']) || !isset($_GET['cid']) )
+            if (!isset($_REQUEST['uid']) || !isset($_REQUEST['sid']) || !isset($_REQUEST['cid']) )
             {                
                 $result['status'] = $this->config->item('fail');               
                 $result['error'] = $this->config->item('invalid_params');
@@ -143,9 +143,9 @@ class Car extends CI_Controller
                 return;
             } 
             
-            $uid=$_GET['uid'];
-            $sid=$_GET['sid'];
-            $cid=$_GET['cid'];
+            $uid=$_REQUEST['uid'];
+            $sid=$_REQUEST['sid'];
+            $cid=$_REQUEST['cid'];
             
             if (!is_numeric ($uid) || !$this->tank_auth->is_valid_session($uid,$sid)){
                 $result['cid'] = $this->config->item('fail');
@@ -165,7 +165,7 @@ class Car extends CI_Controller
          * 
          */
          private function check_car_session() {    	
-            if (!isset($_GET['uid']) || !isset($_GET['sid'])  )
+            if (!isset($_REQUEST['uid']) || !isset($_REQUEST['sid'])  )
             {
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
@@ -173,8 +173,8 @@ class Car extends CI_Controller
                 return;
             } 
             
-            $uid=$_GET['uid'];
-            $sid=$_GET['sid'];            
+            $uid=$_REQUEST['uid'];
+            $sid=$_REQUEST['sid'];            
             
             if (!is_numeric ($uid) || !$this->tank_auth->is_valid_session($uid,$sid)){
                 $result['status'] = $this->config->item('fail');
@@ -197,15 +197,15 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_GET['cid'])){
+             if( !isset($_REQUEST['cid'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
                 
-            $uid=$_GET['uid'];
-            $watch_car_id=$this->cars->add_watch_car($_GET['cid'],$uid);
+            $uid=$_REQUEST['uid'];
+            $watch_car_id=$this->cars->add_watch_car($_REQUEST['cid'],$uid);
             if ($watch_car_id==-1){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('failed');
@@ -227,7 +227,7 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-            $uid=$_GET['uid'];
+            $uid=$_REQUEST['uid'];
      
             $result['status'] = $this->config->item('success');
             $result['cars']= $this->cars->list_watch_car($uid);
@@ -246,15 +246,15 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_GET['cid'])){
+             if( !isset($_REQUEST['cid'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
                 
-            $uid=$_GET['uid'];
-            $cid=$_GET['cid'];
+            $uid=$_REQUEST['uid'];
+            $cid=$_REQUEST['cid'];
             $this->cars->remove_watch_car($cid,$uid);
             
             $result['status'] = $this->config->item('success');
@@ -269,15 +269,15 @@ class Car extends CI_Controller
          function list_latest_cars() {    	
             
            
-             if( !isset($_GET['number']) || !isset($_GET['offset']) ){
+             if( !isset($_REQUEST['number']) || !isset($_REQUEST['offset']) ){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
                             
-            $number=$_GET['number'];
-            $offset=$_GET['offset'];
+            $number=$_REQUEST['number'];
+            $offset=$_REQUEST['offset'];
             $showall=1; //by default show all cars for all users 
             $uid="1"; //it's meaning less parameter
             
@@ -293,15 +293,15 @@ class Car extends CI_Controller
          */
          function list_popular_cars() {    	
             
-            if( !isset($_GET['number']) || !isset($_GET['offset']) ){
+            if( !isset($_REQUEST['number']) || !isset($_REQUEST['offset']) ){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
            
-            $number=$_GET['number'];
-            $offset=$_GET['offset'];            
+            $number=$_REQUEST['number'];
+            $offset=$_REQUEST['offset'];            
             
             $result['status'] = $this->config->item('success');
             $result['cars']= $this->cars->list_popular_cars($number, $offset);
@@ -317,13 +317,13 @@ class Car extends CI_Controller
          */
          function get_car_detail() {    	
            
-            if( !isset($_GET['cid'])){
+            if( !isset($_REQUEST['cid'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
-            $cid=$_GET['cid'];
+            $cid=$_REQUEST['cid'];
             
             $acar= $this->cars->get_car_by_id($cid);
             //incrase the number of visitors of the car
@@ -373,25 +373,25 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
              
-            if( !isset($_GET['number'])){
+            if( !isset($_REQUEST['number'])){
                 $result['status'] =$this->config->item('fail');          
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $uid=$_GET['uid'];
-            $number=$_GET['number'];
-            $offset = (isset($_GET['offset'])) ? $_GET['offset'] : "";
-            $make = (isset($_GET['make'])) ? $_GET['make'] : "";
-            $model = (isset($_GET['model'])) ? $_GET['model'] : "";
-            $s_price = (isset($_GET['s_price'])) ? $_GET['s_price'] : "";
-            $e_price= (isset($_GET['e_price'])) ? $_GET['e_price'] : "";
-            $p_code= (isset($_GET['p_code'])) ? $_GET['p_code'] : "";
-            $radius= (isset($_GET['radius'])) ? $_GET['radius'] : 9999999999;
-            //$loc=$_GET['loc'];            
+            $uid=$_REQUEST['uid'];
+            $number=$_REQUEST['number'];
+            $offset = (isset($_REQUEST['offset'])) ? $_REQUEST['offset'] : "";
+            $make = (isset($_REQUEST['make'])) ? $_REQUEST['make'] : "";
+            $model = (isset($_REQUEST['model'])) ? $_REQUEST['model'] : "";
+            $s_price = (isset($_REQUEST['s_price'])) ? $_REQUEST['s_price'] : "";
+            $e_price= (isset($_REQUEST['e_price'])) ? $_REQUEST['e_price'] : "";
+            $p_code= (isset($_REQUEST['p_code'])) ? $_REQUEST['p_code'] : "";
+            $radius= (isset($_REQUEST['radius'])) ? $_REQUEST['radius'] : 9999999999;
+            //$loc=$_REQUEST['loc'];            
             $result['status'] = $this->config->item('success');
-            $result['cars']= $this->cars->a_search_list($make,$model,$s_price,$e_price,$p_code,$radius,$number,$offset);
+            $result['cars']= $this->cars->a_search_list($make,$model,$s_price,$e_price,$p_code,$radius,$number,$offset,$uid);
             
             echo json_encode($result);	
             
@@ -437,32 +437,32 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
              
-             if( !isset($_GET['cid']) || $_GET['cid']==""){
+             if( !isset($_REQUEST['cid']) || $_REQUEST['cid']==""){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $uid=$_GET['uid']; $cid=$_GET['cid'];
+            $uid=$_REQUEST['uid']; $cid=$_REQUEST['cid'];
             
             
-            if( !isset($_GET['number']) || $_GET['number']==""){
+            if( !isset($_REQUEST['number']) || $_REQUEST['number']==""){
                 $result['number'] = "-1";
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            if( !isset($_GET['offset']) || $_GET['offset']==""){
+            if( !isset($_REQUEST['offset']) || $_REQUEST['offset']==""){
                 $result['offset'] = "-1";
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $number=$_GET['number'];
-            $offset=$_GET['offset'];
+            $number=$_REQUEST['number'];
+            $offset=$_REQUEST['offset'];
             
             $result['status'] = $this->config->item('success');
             $result['comments']= $this->cars->list_comment_car($cid, $number, $offset);
@@ -481,14 +481,14 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_GET['comm_id'])){
+             if( !isset($_REQUEST['comm_id'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
                 
-            $comm_id=$_GET['comm_id']; $uid=$_GET['uid'];
+            $comm_id=$_REQUEST['comm_id']; $uid=$_REQUEST['uid'];
             $this->cars->remove_comment_car_by_id($comm_id);         
             
             $result['status'] = $this->config->item('success');
@@ -614,30 +614,30 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
              
-             if( !isset($_GET['s_id']) || $_GET['s_id']=="" || !isset($_GET['r_id']) || $_GET['r_id']==""){
+             if( !isset($_REQUEST['s_id']) || $_REQUEST['s_id']=="" || !isset($_REQUEST['r_id']) || $_REQUEST['r_id']==""){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $uid=$_GET['uid']; $s_id=$_GET['s_id']; $r_id=$_GET['r_id'];
+            $uid=$_REQUEST['uid']; $s_id=$_REQUEST['s_id']; $r_id=$_REQUEST['r_id'];
             $result['status'] =$this->config->item('success');
             
-            if( !isset($_GET['number']) || $_GET['number']==""){                
+            if( !isset($_REQUEST['number']) || $_REQUEST['number']==""){                
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            if( !isset($_GET['offset']) || $_GET['offset']==""){                
+            if( !isset($_REQUEST['offset']) || $_REQUEST['offset']==""){                
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $number=$_GET['number'];
-            $offset=$_GET['offset'];
+            $number=$_REQUEST['number'];
+            $offset=$_REQUEST['offset'];
             
             $result['msgs']= $this->cars->list_message_car($s_id, $r_id, $number, $offset);
             
@@ -654,14 +654,14 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_GET['msg_id'])){
+             if( !isset($_REQUEST['msg_id'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
                 
-            $msg_id=$_GET['msg_id']; $uid=$_GET['uid'];
+            $msg_id=$_REQUEST['msg_id']; $uid=$_REQUEST['uid'];
             $this->cars->remove_message_car_by_id($msg_id);         
             
             $result['status'] = $this->config->item('success');
@@ -710,31 +710,31 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
              
-             if( !isset($_GET['cid']) || $_GET['cid']==""){
+             if( !isset($_REQUEST['cid']) || $_REQUEST['cid']==""){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $uid=$_GET['uid']; $cid=$_GET['cid']; 
+            $uid=$_REQUEST['uid']; $cid=$_REQUEST['cid']; 
                         
-            if( !isset($_GET['number']) || $_GET['number']==""){
+            if( !isset($_REQUEST['number']) || $_REQUEST['number']==""){
                 
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            if( !isset($_GET['offset']) || $_GET['offset']==""){
+            if( !isset($_REQUEST['offset']) || $_REQUEST['offset']==""){
                 
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $number=$_GET['number'];
-            $offset=$_GET['offset'];
+            $number=$_REQUEST['number'];
+            $offset=$_REQUEST['offset'];
             
             $result['status'] = $this->config->item('success');
             $result['offers']= $this->cars->list_offer_car($cid, $number, $offset);
@@ -752,14 +752,14 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_GET['offer_id'])){
+             if( !isset($_REQUEST['offer_id'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
                 
-            $offer_id=$_GET['offer_id']; $uid=$_GET['uid'];
+            $offer_id=$_REQUEST['offer_id']; $uid=$_REQUEST['uid'];
             $this->cars->remove_offer_car_by_id($offer_id);
             
             $result['status'] =$this->config->item('success');;
@@ -778,14 +778,14 @@ class Car extends CI_Controller
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_GET['pcodeA']) || !isset($_GET['pcodeB'])){
+             if( !isset($_REQUEST['pcodeA']) || !isset($_REQUEST['pcodeB'])){
                 $result['uid'] = "-1";
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
-            $uid=$_GET['uid'];
-            $pcodeA=$_GET['pcodeA']; $pcodeB=$_GET['pcodeB'];
+            $uid=$_REQUEST['uid'];
+            $pcodeA=$_REQUEST['pcodeA']; $pcodeB=$_REQUEST['pcodeB'];
             $distance=$this->cars->calc_postcode_distance($pcodeA,$pcodeB);
             
             $result['uid'] = $uid;

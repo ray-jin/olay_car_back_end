@@ -45,7 +45,7 @@
 
 </head>
 
-<body>
+<body style="min-width:1250px;">
 
 	<header id="header">
 		<hgroup>

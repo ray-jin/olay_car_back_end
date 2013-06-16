@@ -92,7 +92,7 @@
             <label style="width:100%;">Username : <?php echo $post['username'] ?></label>
             <img src="<?php echo HOST.UPLOAD_PATH.$user_profile['image_loc'];?>"
                  alt="No Image" height="80" width="80" style="padding-left: 10px;">
-            &nbsp;&nbsp; <input type="file" name="profile_img" />
+            &nbsp;&nbsp; <input type="file" name="profile_img" accept="image/*"/>
     </fieldset>
     <fieldset>
             <label style="width:100%;">Email : <?php echo $post['email'] ?></label>

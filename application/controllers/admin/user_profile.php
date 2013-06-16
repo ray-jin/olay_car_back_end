@@ -31,10 +31,15 @@ class User_profile extends CI_Controller
 
 	function index()
 	{
+                if(!$this->tank_auth->is_logged_in()) {
+                    redirect("auth/login");
+                }
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
 
-		$result = $this->manage_m->get_object_list("users",-1,$start_no,$per_page);
+                $data['s_fullname'] = isset($_REQUEST['s_fullname']) ? trim($_REQUEST['s_fullname']) : "" ;
+		$result = $this->users->get_user_profile_list(-1,$start_no,$per_page,$data['s_fullname']);
+		
 		$total_page = $result['total'];
 		$data['user_list'] = $result['rows'];
 		

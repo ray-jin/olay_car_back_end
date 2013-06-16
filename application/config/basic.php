@@ -32,3 +32,6 @@
         define ('HOST',"http://192.168.180.90/cars/");
         define('UPLOAD_PATH', 'uploads/');
         define('ADMIN_USER_ID',1);
+        define('FAIL',-1);
+        define('SUCCESS',0);
+        

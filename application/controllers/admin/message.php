@@ -29,13 +29,13 @@ class Message extends CI_Controller
 		$total_page = $result['total'];
 		$data['message_list'] = $result['rows'];
 		
-		$base_url = site_url("backend/bmessage?a=1");
+		$base_url = site_url("admin/message?a=1");
 		$data['pagenation'] = $this->messages->_create_pagenation($per_page, $total_page, $base_url);
-		$data['post_key'] = "bmessage";
-		$this->load->view('bmessage/bmessage_list_v',$data);	
+		$data['post_key'] = "message";
+		$this->load->view('message/message_list_v',$data);	
 	}
         
-        function bmessage_del() {
+        function message_del() {
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
@@ -43,16 +43,16 @@ class Message extends CI_Controller
 		}
 		$this->_proc_post_del($post_id);
 		
-		redirect("backend\bmessage");
+		redirect("admin\message");
 	}
 	
-        function bmessage_add() {
+        function message_add() {
 		$data = $this->_proc_post_add();
-		$data['post_key'] = "bmessage";
-		$this->load->view('bmessage/bmessage_add_v', $data);
+		$data['post_key'] = "message";
+		$this->load->view('message/message_add_v', $data);
 	}
         
-       function bmessage_edit() {		
+       function message_edit() {		
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select message!";
@@ -60,9 +60,9 @@ class Message extends CI_Controller
 		}
 		
 		$data = $this->_proc_post_edit($post_id);
-		$data['post_key'] = "bmessage";	
+		$data['post_key'] = "message";	
 		$data['post'] = $this->messages->get_specific_data($post_id);
-		$this->load->view('bmessage/bmessage_edit_v', $data);
+		$this->load->view('message/message_edit_v', $data);
 	}
         
         private function &_proc_post_add() {
@@ -96,7 +96,7 @@ class Message extends CI_Controller
 
                                 if($this->db->insert($tbl_name, $qry)){
                                 //	$data['show_message'] = "Successfully added!";
-                                        redirect("backend/bmessage");
+                                        redirect("admin/message");
                                 }
 
 			}			

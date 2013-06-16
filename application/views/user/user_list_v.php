@@ -3,6 +3,18 @@ $f_search = array(	//text field
 		'name'	=> 'f_search',			
 	);
 ?>
+<form name="frmSearch"  method="post" action="<?php  echo site_url("admin/user") ?>" >
+    <article class="module width_full">
+            <header>
+                    <h3> Search </h3>
+            </header>
+            <div class="module_content">
+                User Name :  <input type="text" style="width : 150px;" name="s_username" value="<?php echo $s_username; ?>" />  &nbsp;
+                <input type="submit" name="fsubmit" value="Search" class="alt_btn">
+            </div>
+                    
+    </article>
+</form>
 
 <article class="module width_full">
     <header>

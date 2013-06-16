@@ -131,7 +131,7 @@ class Cars extends CI_Model
          * @img_loc_array array of image location
 	 * @return	car_id
 	 */
-	function create_car($uid,$registration,$price,$img_loc_array,$username)
+	function create_car($uid,$registration,$price,$img_loc_array,$username,$cid)
 	{		
             $this->db->set('uid', $uid);
             $this->db->set('activated', 1); //need to consider
@@ -139,8 +139,8 @@ class Cars extends CI_Model
             $this ->db->set('created',date('Y-m-d H:i:s'));
             $this->db->set('price', $price);
             $i=1;    
-            foreach ($img_loc_array as $value) {
-              $this->db->set('car_img_url_'.$i, $username."//cars//".$value);
+            foreach ($img_loc_array as $value) {              
+              $this->db->set('file_url_'.$i, $username."/cars/".$cid."/".$value);
               $i++;              
             }
              
@@ -151,22 +151,7 @@ class Cars extends CI_Model
             return -1;
 	}
         
-        /**
-	 * Create new car image_loc record
-	 *
-	 * @param	array
-	 * @return	array
-	 */
-	 private function create_car_img_loc($img_loc_array,$car_id,$username)
-	{
-             foreach ($img_loc_array as &$value) {
-                $this->db->set('car_id', $car_id);
-                $this->db->set('img_loc', $username."//cars//".$value);
-                $this->db->insert($this->car_img_table_name);
-             }
-             
-            return true;
-	}
+       
         
         /**
 	 * List car img url file
@@ -227,7 +212,8 @@ class Cars extends CI_Model
           * @m_age : mileage
           * @desc : description 
 	 */
-	function update_car2($cid, $make, $model, $year, $f_type, $trans, $m_age,$desc)
+        
+	function update_car2($cid, $make, $model, $year, $f_type, $trans, $m_age,$desc,$img_loc_array,$username,$activated)
 	{
 		$this->db->set('make', $make);
 		$this->db->set('model', $model);
@@ -237,7 +223,27 @@ class Cars extends CI_Model
                 $this->db->set('mileage', $m_age);
                 $this->db->set('desc', $desc);
                 $this->db->set('modified',date('Y-m-d H:i:s'));
+                if (isset($activated))
+                    $this->db->set('activated',$activated);
+                $car=$this->get_specific_data($cid);
                 
+                $i=0;
+                foreach ($img_loc_array as $value) {
+                    if ($value!="") {
+                        if ($car['file_url_'.$i]!="")
+                        {
+                            $tmp=UPLOAD_PATH."/".$car['file_url_'.$i];
+                            if (file_exists($tmp))
+                                unlink($tmp); //delete physical image file
+                        }
+                        
+
+                        $this->db->set('file_url_'.$i, $username."/cars/".$cid."/".$value);
+                    }
+                    
+                    $i++;              
+                }
+                 
 		$this->db->where('id', $cid);		
 
 		$this->db->update($this->table_name);
@@ -268,13 +274,15 @@ class Cars extends CI_Model
 	{
             $car=$this->get_specific_data($car_id);
             
-            for ($i=1; $i<=5; $i++){                
-                
-                $tmp=UPLOAD_PATH."/".$car['car_img_url_'.$i];
-                if (file_exists($tmp))
-                    unlink($tmp); //delete physical image file
-                                
-            }            
+            $this->load->library('tank_auth');
+            $user=$this->users->get_user_by_id($car['uid']);
+            $path=UPLOAD_PATH."/".$user->username."/cars/".$car_id."/";
+            
+            
+            $this->load->helper("file"); // load the helper
+            delete_files($path, true); // delete all files/folders
+            rmdir($path);
+            
             $this->db->where('id', $car_id);
             $this->db->delete($this->table_name);
 	}
@@ -454,7 +462,7 @@ class Cars extends CI_Model
          * @price : price
          * @loc : current postal code
 	 */
-	function a_search_list($make,$model,$s_price,$e_price,$p_code,$radius,$number,$offset)
+	function a_search_list($make,$model,$s_price,$e_price,$p_code,$radius,$number,$offset,$user_id)
 	{
             //get postal code from post code tables
             $list=array();
@@ -481,7 +489,8 @@ class Cars extends CI_Model
             
             $this->db->order_by("modified", "desc"); 
             
-            //$this->db->where('cid !=', 'NULL');
+            if ($user_id!=ADMIN_USER_ID)
+                $this->db->where('activated', '1');
             $steps=10; // the number which is used to retrive the records at one time
             $count=0; $i=0;
             do {
@@ -503,15 +512,25 @@ class Cars extends CI_Model
                     $kms=round($hypot/1000,2);            
                     
                     if ($kms<$radius){
-                        $list[$i] = array( 'cid' => $row->id,
+                        $list[$i] = array( 'id' => $row->id,
+                            'uid' =>$row->uid,
                             'make' => $row->make,
-                                'model' => $row->model,
+                             'model' => $row->model,
+                            'activated' => $row->activated,
+                            'registration' => $row->registration,
                             'year' => $row->year,
                             'fuel_type' => $row->fuel_type,
                             'transmission' => $row->transmission,
                             'mileage' => $row->mileage,
                             'price' => $row->price,
-                            'desc' => $row->desc,);
+                            'file_url_1' => $row->file_url_1,
+                            'file_url_2' => $row->file_url_2,
+                            'file_url_3' => $row->file_url_3,
+                            'file_url_4' => $row->file_url_4,
+                            'file_url_5' => $row->file_url_5,
+                            'created' =>$row->created,
+                            'desc' => $row->desc,); 
+                        //$list[$i]=(array) $row;
 
                             $i++;
 

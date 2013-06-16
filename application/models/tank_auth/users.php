@@ -34,11 +34,42 @@ class Users extends CI_Model
 	function get_user_by_id($user_id, $activated=1)
 	{
 		$this->db->where('id', $user_id);
-		$this->db->where('activated', $activated ? 1 : 0);
+                if ($activated)
+                    $this->db->where('activated', $activated ? 1 : 0);
 
 		$query = $this->db->get($this->table_name);
 		if ($query->num_rows() == 1) return $query->row();
 		return NULL;
+	}
+        //*****Search*************
+        function &get_object_list( $banned=-1, $start=0, $count=1000, $s_username) {
+
+		$strSql = "SELECT COUNT(*) AS cnt FROM users WHERE 1=1 and lower(username) like lower('%$s_username%') ";
+		$query = $this->db->query($strSql);		
+		$row = $query->row_array();
+		$return_arr['total'] = $row['cnt'];
+		
+                $strSql = "SELECT * FROM users WHERE 1=1 and lower(username) like lower('%$s_username%') ORDER BY id  LIMIT $start, $count";
+		$query = $this->db->query($strSql);
+		$return_arr['rows'] = $query->result_array();
+		
+		return $return_arr;
+	}
+        
+           //*****Search*************
+        function &get_user_profile_list( $banned=-1, $start=0, $count=1000, $s_fullname) {
+
+		$strSql = "SELECT COUNT(*) AS cnt FROM users WHERE 1=1 and username like '%$s_fullname%' ";
+		$query = $this->db->query($strSql);		
+		$row = $query->row_array();
+		$return_arr['total'] = $row['cnt'];
+		                
+                $strSql="SELECT u.* FROM users u, user_profiles up WHERE u.`user_profile_id`=up.`id` AND ".
+                    "LOWER(up.`ufuname`) LIKE LOWER('%$s_fullname%') ORDER BY u.id LIMIT $start, $count";
+		$query = $this->db->query($strSql);
+		$return_arr['rows'] = $query->result_array();
+		
+		return $return_arr;
 	}
 
 	/**

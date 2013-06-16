@@ -3,7 +3,18 @@ $f_search = array(	//text field
 		'name'	=> 'f_search',			
 	);
 ?>
-
+<form name="frmSearch"  method="post" action="<?php  echo site_url("admin/user_profile") ?>" >
+    <article class="module width_full">
+            <header>
+                    <h3> Search </h3>
+            </header>
+            <div class="module_content">
+                Full Name :  <input type="text" style="width : 150px;" name="s_fullname" value="<?php echo $s_fullname; ?>" />  &nbsp;
+                <input type="submit" name="fsubmit" value="Search" class="alt_btn">
+            </div>
+                    
+    </article>
+</form>
 <article class="module width_full">
     <header>
         <h3 class="tabs_involved"> User Profile List </h3>

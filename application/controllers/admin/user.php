@@ -31,16 +31,22 @@ class User extends CI_Controller
 
 	function index()
 	{
+                if(!$this->tank_auth->is_logged_in()) {
+                    redirect("auth/login");
+                }
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
 
-		$result = $this->manage_m->get_object_list("users",-1,$start_no,$per_page);
+                $data['s_username'] = isset($_REQUEST['s_username']) ? trim($_REQUEST['s_username']) : "" ;
+		$result = $this->users->get_object_list(-1,$start_no,$per_page,$data['s_username']);
 		$total_page = $result['total'];
 		$data['user_list'] = $result['rows'];
 		
 		$base_url = site_url("user?a=1");
 		$data['pagenation'] = $this->manage_m->_create_pagenation($per_page, $total_page, $base_url);
 		$data['post_key'] = "user";
+               
+                
 		$this->load->view('user/user_list_v',$data);	
 	}
 	

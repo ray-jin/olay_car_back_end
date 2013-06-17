@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-class Message extends CI_Controller
+class Inbox extends CI_Controller
 {
 	function __construct()
 	{
@@ -9,6 +9,7 @@ class Message extends CI_Controller
 		$this->load->library('security');
 		$this->load->library('tank_auth');
 		$this->load->model('messages');
+                $this->load->model('manage_m'); // a little different
                 $this->load->helper('url');
                 $this->load->library('form_validation');
                 
@@ -22,20 +23,32 @@ class Message extends CI_Controller
         
 	function index()
 	{
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
 
-		$result = $this->messages->get_object_list($start_no,$per_page);
+                $data['sender_name'] = isset($_REQUEST['sender_name']) ? trim($_REQUEST['sender_name']) : "" ;
+                $data['receiver_name'] = isset($_REQUEST['receiver_name']) ? trim($_REQUEST['receiver_name']) : "" ;
+                                
+		//$result = $this->messages->list_messages(0,1000,$data['sender_name'] ,$data['receiver_name']);                
+                $result = $this->messages->list_messages($start_no,$per_page,$data['sender_name'],$data['receiver_name'],"inbox" );
+                
 		$total_page = $result['total'];
 		$data['message_list'] = $result['rows'];
 		
-		$base_url = site_url("admin/message?a=1");
+		$base_url = site_url("admin/inbox?a=1")."&sender_name=".$data['sender_name']."&receiver_name=". $data['receiver_name'];
 		$data['pagenation'] = $this->messages->_create_pagenation($per_page, $total_page, $base_url);
-		$data['post_key'] = "message";
-		$this->load->view('message/message_list_v',$data);	
+		$data['post_key'] = "inbox";
+                $data['start_no'] =$start_no;
+		$this->load->view('inbox/inbox_list_v',$data);	
 	}
         
-        function message_del() {
+        function inbox_del() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
@@ -43,16 +56,22 @@ class Message extends CI_Controller
 		}
 		$this->_proc_post_del($post_id);
 		
-		redirect("admin\message");
+		redirect("admin\inbox");
 	}
 	
-        function message_add() {
+        function inbox_add() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$data = $this->_proc_post_add();
-		$data['post_key'] = "message";
-		$this->load->view('message/message_add_v', $data);
+		$data['post_key'] = "inbox";
+		$this->load->view('inbox/inbox_add_v', $data);
 	}
         
-       function message_edit() {		
+       function inbox_edit() {
+            if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select message!";
@@ -60,9 +79,9 @@ class Message extends CI_Controller
 		}
 		
 		$data = $this->_proc_post_edit($post_id);
-		$data['post_key'] = "message";	
-		$data['post'] = $this->messages->get_specific_data($post_id);
-		$this->load->view('message/message_edit_v', $data);
+		$data['post_key'] = "inbox";	
+		$data['post'] = $this->messages->get_specific_data($post_id,"inbox");
+		$this->load->view('inbox/inbox_edit_v', $data);
 	}
         
         private function &_proc_post_add() {
@@ -78,7 +97,7 @@ class Message extends CI_Controller
 		if ($this->form_validation->run())
 		{
 					
-			$tbl_name = "message_cars";
+			$tbl_name = "inbox";
 			$new_idx = $this->messages->get_next_insert_idx($tbl_name);
 		
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
@@ -96,7 +115,7 @@ class Message extends CI_Controller
 
                                 if($this->db->insert($tbl_name, $qry)){
                                 //	$data['show_message'] = "Successfully added!";
-                                        redirect("admin/message");
+                                        redirect("admin/inbox");
                                 }
 
 			}			
@@ -121,7 +140,7 @@ class Message extends CI_Controller
 		if ($this->form_validation->run())
 		{	
                 
-                    $tbl_name = "message_cars";	
+                    $tbl_name = "inbox";	
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
 				
 
@@ -137,7 +156,7 @@ class Message extends CI_Controller
 				);
 				
 				$this->db->where('id', $new_idx);
-				$this->db->update($tbl_name, $qry);
+				$this->db->update("inbox", $qry);
 				
 				$data['show_message'] = "Successfully updated!";
 
@@ -149,7 +168,7 @@ class Message extends CI_Controller
     } //end function
     
     private function _proc_post_del($idx) {    	
-            $strSql = "DELETE FROM message_cars WHERE id='$idx' ";
+            $strSql = "DELETE FROM inbox WHERE id='$idx' ";
             $this->db->query($strSql);
     }
 }

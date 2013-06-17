@@ -54,6 +54,29 @@ class Offers extends CI_Model
 		return $pagenation;
     }
 	
+     //&get_object_list( $start=0, $count=1000, $search_option='') 
+            
+        function list_offers($start,$count,$username)
+       {
+            
+            $strSql = "SELECT count(*) as cnt  FROM offer_cars o 
+                inner join users up on (o.`uid`=up.`id` and LOWER(up.`username`) LIKE LOWER('%$username%')) 
+                ORDER BY o.id DESC ";
+                        
+            $query = $this->db->query($strSql);		
+            $row = $query->row_array();
+            $return_arr['total'] = $row['cnt'];
+            
+            $strSql = "SELECT o.*  FROM offer_cars o 
+                inner join users up on (o.`uid`=up.`id` and LOWER(up.`username`) LIKE LOWER('%$username%')) 
+                ORDER BY o.id DESC LIMIT $start, $count";
+            
+            $query = $this->db->query($strSql);
+            $return_arr['rows'] = $query->result_array();
+
+            return $return_arr;
+
+       }
 	
 	
 	

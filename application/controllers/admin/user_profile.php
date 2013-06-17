@@ -43,21 +43,30 @@ class User_profile extends CI_Controller
 		$total_page = $result['total'];
 		$data['user_list'] = $result['rows'];
 		
-		$base_url = site_url("user?a=1");
+		$base_url = site_url("user?a=1")."&s_fullname=".$data['s_fullname'];
 		$data['pagenation'] = $this->manage_m->_create_pagenation($per_page, $total_page, $base_url);
 		$data['post_key'] = "user_profile";
 		$this->load->view('user_profile/user_profile_list_v',$data);	
 	}
-	
-	
-		
-	function user_profile_edit() {		
+        
+	function user_profile_add() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
+            $data = $this->_proc_post_add();
+            $data['post_key'] = "user";
+            $this->load->view('user_profile/user_profile_add_v', $data);
+	}
+        
+	function user_profile_edit() {	
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
             $post_id = $this->uri->segment(4, 0);
             if (empty($post_id)) {
                     echo "select task!";
                     return;
             }
-
             $data = $this->_proc_post_edit($post_id);
             $data['post_key'] = "user";	
             $data['post'] = $this->manage_m->get_specific_data($post_id, "users");
@@ -65,7 +74,50 @@ class User_profile extends CI_Controller
                 
 	}
 		
-	
+	private function &_proc_post_add() {
+		$this->load->library('upload');
+		
+		$this->form_validation->set_rules('user_id', 'User Id', 'trim|required|xss_clean|integer');
+                $this->form_validation->set_rules('ufuname', 'Fullname', 'trim');
+		$this->form_validation->set_rules('current_car', 'Current Car', 'trim');
+		$this->form_validation->set_rules('about_me', 'About me', 'trim');
+                $this->form_validation->set_rules('loc', 'Postcode', 'trim|min_length[2]|max_length[4]');
+		
+		$qry = array();
+		$data = array();
+		
+		if ($this->form_validation->run())
+		{		
+			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
+                        
+                            if( !$this->users->get_user_by_id($this->input->post('user_id'))) 
+                            {
+                                $data['show_errors'] = "No such user";
+                                return $data;
+                            }
+                            if( $this->users->get_profile_by_userid($this->input->post('user_id'))) 
+                            {
+                                $data['show_errors'] = "Profile already exist";
+                                return $data;
+                            }
+
+                            $tbl_name = "user_profiles";
+                        
+                            if ($this->users->update_user_profile($this->input->post('user_id'),$this->input->post('ufuname'),
+                                    $this->input->post('current_car'),$this->input->post('about_me'),$this->input->post('loc'),"","",false)){
+//function update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$username,$img_del=true),                            
+                           	redirect("admin/user_profile");
+                            }
+                            else{
+                                $data['show_errors'] = "Error occured";
+                            }
+				
+			}			
+		}//end run
+		
+		return $data;
+    }
+    
     private function &_proc_post_edit($new_idx) { 
         $user=$this->manage_m->get_specific_data($new_idx, "users");
         $new_idx=$user['user_profile_id'];
@@ -74,7 +126,7 @@ class User_profile extends CI_Controller
         $this->form_validation->set_rules('ufuname', 'Full Name', 'trim|required');
         $this->form_validation->set_rules('current_car', 'Current Car', 'trim');
         $this->form_validation->set_rules('about_me', 'About me', 'trim');
-        $this->form_validation->set_rules('loc', 'Postcode', 'trim|min_length[3]|max_length[4]');
+        $this->form_validation->set_rules('loc', 'Postcode', 'trim|min_length[2]|max_length[4]');
 
 		$qry = array();
 		$data = array();

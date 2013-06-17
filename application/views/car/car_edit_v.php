@@ -1,7 +1,7 @@
 <article class="module width_full">
 <header>
 	<h3>
-	Edit ( <?php echo $post['id']; ?> ) </h3>
+     Car Edit ( <?php echo $post['id']; ?> ) </h3>
 </header>
 <?php
 	
@@ -39,7 +39,7 @@
                 echo form_error('registration');
                 echo form_error('year');
                 echo form_error('mileage');
-              
+                echo form_error('postcode');
         
 		if (isset($show_errors)) {?>
                     <h4 class="alert_error">
@@ -154,9 +154,11 @@
             <td>   <input type="text" size="15" style="width:150px;"  name="transmission" value="<?php echo $post['transmission'];?>"  /> &nbsp; </td>
             <td> Mileage : </td>
             <td>   <input type="text" size="15" name="mileage" style="width:150px; text-align: right;" value="<?php echo $post['mileage'];?>" /> &nbsp; </td>
-      <!--      <td> Postcode : </td>
-            <td>   <input type="text" size="15" maxlength="4" name="postcode" value="<?php echo $post['postcode'];?>"  /> &nbsp; </td> -->
         </tr> 
+        <tr>
+            <td> Postcode : </td>
+            <td>   <input type="text" size="15" maxlength="4" name="postcode" value="<?php echo $post['postcode'];?>"  /> &nbsp; </td> 
+        </tr>
         <tr>
             <td colspan="8">
                 Description

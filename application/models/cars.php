@@ -13,7 +13,7 @@
 class Cars extends CI_Model
 {
 	private $table_name			= 'cars';			// cars
-	private $car_img_table_name	= 'car_imgs';	// car images
+	
         private $watch_car_table_name = 'watch_cars';
         private $comment_car_table_name = "comment_cars";
         private $message_car_table_name = "message_cars";
@@ -25,8 +25,7 @@ class Cars extends CI_Model
             parent::__construct();
 
             $ci =& get_instance();
-            $this->table_name			= $ci->config->item('db_table_prefix', 'tank_auth').$this->table_name;
-            $this->car_img_table_name	= $ci->config->item('db_table_prefix', 'tank_auth').$this->car_img_table_name;
+            $this->table_name			= $ci->config->item('db_table_prefix', 'tank_auth').$this->table_name;            
             $this->watch_car_table_name	= $ci->config->item('db_table_prefix', 'tank_auth').$this->watch_car_table_name;
             $this->comment_car_table_name   = $ci->config->item('db_table_prefix', 'tank_auth').$this->comment_car_table_name;
             $this->message_car_table_name	= $ci->config->item('db_table_prefix', 'tank_auth').$this->message_car_table_name;
@@ -98,10 +97,8 @@ class Cars extends CI_Model
 	 * @return	object
 	 */
 	function get_post_code_obj($p_code)
-	{
-            $this->db->like('Pcode', $p_code);
-            //$this->db->like('make', $make); 
-            
+	{            
+            $this->db->where('Pcode', $p_code);
             $query = $this->db->get($this->post_codes_table_name);
             
             if ($query->num_rows() >= 1) return $query->row();
@@ -122,6 +119,36 @@ class Cars extends CI_Model
                 if ($query->num_rows() == 1) return $query->row();
 		return NULL;
 	}
+        
+         /**
+	 * Get comment record by Id
+	 *
+	 * @param	int
+	 * @return	object
+	 */
+	function get_offer_by_id($offer_id)
+	{
+		$this->db->where('id', $offer_id);
+		$query = $this->db->get($this->offer_car_table_name);
+
+                if ($query->num_rows() == 1) return $query->row();
+		return NULL;
+	}
+        
+        /**
+	 * Get message record by Id
+	 *
+	 * @param	int
+	 * @return	object
+	 */
+	function get_message_by_id($message_id,$tbl_name)
+	{
+		$this->db->where('id', $message_id);
+		$query = $this->db->get($tbl_name);
+
+                if ($query->num_rows() == 1) return $query->row();
+		return NULL;
+	}
 
 	
 	/**
@@ -131,13 +158,14 @@ class Cars extends CI_Model
          * @img_loc_array array of image location
 	 * @return	car_id
 	 */
-	function create_car($uid,$registration,$price,$img_loc_array,$username,$cid)
+	function create_car($uid,$registration,$price,$img_loc_array,$username,$cid,$postcode="")
 	{		
             $this->db->set('uid', $uid);
             $this->db->set('activated', 1); //need to consider
             $this->db->set('registration', $registration);
             $this ->db->set('created',date('Y-m-d H:i:s'));
             $this->db->set('price', $price);
+            $this->db->set('postcode', $postcode);
             $i=1;    
             foreach ($img_loc_array as $value) {              
               $this->db->set('file_url_'.$i, $username."/cars/".$cid."/".$value);
@@ -154,25 +182,23 @@ class Cars extends CI_Model
        
         
         /**
-	 * List car img url file
+	 * List postcodes
 	 *
 	 * @param	array
 	 * @return	array
 	 */
-	 public function list_car_img_loc($car_id)
+	 public function list_postcodes()
 	{
-            $this->db->where('car_id', $car_id);
             
-            $query = $this->db->get($this->car_img_table_name);
+            $query = $this->db->get("postcodes");
             
             $list=array(); $i=0;
             foreach ($query->result() as $row)
             {
-                $id=$row->id;
                 
                 //'user'	=>	'Users',	
-                $list[$i] = array( 'id' => $row->id,
-                        'img_loc' => $row->img_loc,
+                $list[$i] = array( 'id' => $row->Postcode_ID,
+                        'pcode' => $row->Pcode,
                     );                
                 $i++;
             }
@@ -181,27 +207,7 @@ class Cars extends CI_Model
                          
 	}
         
-        /**
-	 * get first car img url file
-	 *
-	 * @param	array
-	 * @return	array
-	 */
-	 public function get_first_car_img_loc($car_id)
-	{
-            $this->db->where('car_id', $car_id);
-            
-            $query = $this->db->get($this->car_img_table_name);
-            
-            if (sizeof ($query->result()) >0){
-                $row=$query->result();
-                return $row[0]->img_loc;
-            }
-            else
-                return null;
-                         
-	}
-        
+       
         /**
 	 * Update car listing details once the car listing is created
          * @make : manufactuer
@@ -213,7 +219,8 @@ class Cars extends CI_Model
           * @desc : description 
 	 */
         
-	function update_car2($cid, $make, $model, $year, $f_type, $trans, $m_age,$desc,$img_loc_array,$username,$activated)
+	function update_car2($cid, $make, $model, $year, $f_type, $trans, $m_age,$desc,$img_loc_array,$username,
+                $activated,$postcode,$registration,$price)
 	{
 		$this->db->set('make', $make);
 		$this->db->set('model', $model);
@@ -222,7 +229,11 @@ class Cars extends CI_Model
 		$this->db->set('transmission', $trans);
                 $this->db->set('mileage', $m_age);
                 $this->db->set('desc', $desc);
+                $this->db->set('postcode', $postcode);
                 $this->db->set('modified',date('Y-m-d H:i:s'));
+                $this->db->set('registration', $registration);
+                $this->db->set('price', $price);
+                
                 if (isset($activated))
                     $this->db->set('activated',$activated);
                 $car=$this->get_specific_data($cid);
@@ -237,7 +248,6 @@ class Cars extends CI_Model
                                 unlink($tmp); //delete physical image file
                         }
                         
-
                         $this->db->set('file_url_'.$i, $username."/cars/".$cid."/".$value);
                     }
                     
@@ -276,12 +286,12 @@ class Cars extends CI_Model
             
             $this->load->library('tank_auth');
             $user=$this->users->get_user_by_id($car['uid']);
-            $path=UPLOAD_PATH."/".$user->username."/cars/".$car_id."/";
+           //$path=UPLOAD_PATH."/".$user->username."/cars/".$car_id."/";
             
             
             $this->load->helper("file"); // load the helper
-            delete_files($path, true); // delete all files/folders
-            rmdir($path);
+           // delete_files($path, true); // delete all files/folders
+          //  rmdir($path);
             
             $this->db->where('id', $car_id);
             $this->db->delete($this->table_name);
@@ -322,17 +332,27 @@ class Cars extends CI_Model
             $list=array(); $i=0;
             foreach ($query->result() as $row)
             {
-                $id=$row->cid;                     
+                $id=$row->cid;
                 $acar=$this->get_car_by_id($id);
-                //'user'	=>	'Users',	
-                $list[$i] = array( 'cid' => $acar->id,
+                if ($acar==null){
+                    $list[$i] = array( 'cid' => "$row->cid",
+                        'live' => "0",
+                    );
+                }
+                else{
+                    //'user'	=>	'Users',	
+                    $list[$i] = array( 'cid' => $acar->id,
                     'make' => $acar->make,
                         'model' => $acar->model,
                     'year' => $acar->year,
                     'fuel_type' => $acar->fuel_type,
                     'transmission' => $acar->transmission,
                     'mileage' => $acar->mileage,
-                    'desc' => $acar->desc,);
+                    'price' => $acar->price,    
+                    'postcode' => $acar->postcode,
+                    'desc' => $acar->desc,
+                    'live' => "1",    );
+                }
                 
                 $i++;
                 
@@ -390,21 +410,20 @@ class Cars extends CI_Model
             foreach ($query->result() as $row)
             {
                 //'user'	=>	'Users',	
-                $url="";
-                if ($this->get_first_car_img_loc($row->id)!=""){
-                    $url=base_url()."//". $this->config->item('upload_path')."//".$this->get_first_car_img_loc($row->id);
-                }
-                
                 $list[$i] = array( 'id' => $row->id,
+                    'uid' => $row->uid,
                     'make' => $row->make,
-                        'model' => $row->model,
+                    'model' => $row->model,
+                    'registration' => $row->registration,
                     'year' => $row->year,
                     'fuel_type' => $row->fuel_type,
                     'transmission' => $row->transmission,
                     'mileage' => $row->mileage,
+                    'price' => $row->price,
+                    'postcode' => $row->postcode,
+                    'file_url_1' => HOST.UPLOAD_PATH. $row->file_url_1,
                     'desc' => $row->desc,
-                    'url' =>  $url,
-                   );
+                    );
                 
                 $i++;
                 
@@ -428,23 +447,22 @@ class Cars extends CI_Model
             
             $list=array(); $i=0;
             foreach ($query->result() as $row)
-            {
-                //'user'	=>	'Users',	
-                $url="";
-                if ($this->get_first_car_img_loc($row->id)!=""){
-                    $url=base_url()."//". $this->config->item('upload_path')."//".$this->get_first_car_img_loc($row->id);
-                }
-                
+            {                
                 $list[$i] = array( 'id' => $row->id,
+                    'uid' => $row->uid,
                     'make' => $row->make,
-                        'model' => $row->model,
+                    'model' => $row->model,
+                    'registration' => $row->registration,
                     'year' => $row->year,
                     'fuel_type' => $row->fuel_type,
                     'transmission' => $row->transmission,
                     'mileage' => $row->mileage,
+                    'price' => $row->price,
+                    'postcode' => $row->postcode,
+                    'file_url_1' => $row->file_url_1,
                     'desc' => $row->desc,
-                    'url' =>  $url,
-                    );//$result['url'] = base_url()."//". $this->config->item('upload_path')."//".$file_loc_array[0]["img_loc"];
+                    
+                    );
                 $i++;
             }
             
@@ -462,83 +480,66 @@ class Cars extends CI_Model
          * @price : price
          * @loc : current postal code
 	 */
-	function a_search_list($make,$model,$s_price,$e_price,$p_code,$radius,$number,$offset,$user_id)
+	function a_search_list($make,$model,$s_price,$e_price,$pcode_obj,$radius,$number,$offset,$user_id)
 	{
             //get postal code from post code tables
             $list=array();
-             
-            $pcode_obj=$this->get_post_code_obj($p_code);
-         
-            if (!$pcode_obj)
-                 return $list;
-         
-             if (($make) && ($make!="")){
-                 $this->db->like('make', $make); 
-             }
-             if (($model) && ($model!="")){
-                 $this->db->like('model', $model); 
-             }
             
-             if (($s_price) && ($s_price!="")){
-                 $this->db->where('price >=', $s_price); 
+            $strSql = "select id, uid, make, model, activated, registration, year, fuel_type, transmission, mileage,"
+                ." price, postcode, file_url_1, file_url_2, file_url_3, file_url_4, file_url_5, created ";
+             if ($pcode_obj!=null){
+                 $strSql.= " ,calc_distance($pcode_obj->Grid_N,$pcode_obj->Grid_E,`postcode`) dist ";
+             }
+             $strSql.=" from cars where 1=1 ";
+            
+             if (($make) && ($make!="")){             
+                 $strSql.=" and make like '%$make%'";
              }
              
-             if (($e_price) && ($e_price!="")){
-                 $this->db->where('price <=', $e_price); 
-             }            
+             if (($model) && ($model!="")){             
+                 $strSql.=" and model like '%$model%'";
+             }
+             
+             if (($s_price) && ($s_price!="")){             
+                 $strSql.=" and price >= $s_price ";
+             }
+             
+             if (($e_price) && ($e_price!="")){             
+                 $strSql.=" and price <= $e_price ";
+             }
+             
+             if ($user_id!=ADMIN_USER_ID)
+                $strSql.=" and activated=1 ";               
+               
             
-            $this->db->order_by("modified", "desc"); 
+            if ($pcode_obj!=null){
+                $order_sql=" calc_distance($pcode_obj->Grid_N,$pcode_obj->Grid_E,`postcode`) ";
+                $strSql.=" and $order_sql BETWEEN 0 AND $radius ";
+                $strSql.=" order by dist ";
+            }
+            else{
+                $strSql.=" order by created desc ";   
+            }
+            $strSql.=" limit $offset, $number";
+            $query=$this->db->query($strSql);
+            $list = $query->result_array();
+            $i=0;
             
-            if ($user_id!=ADMIN_USER_ID)
-                $this->db->where('activated', '1');
-            $steps=10; // the number which is used to retrive the records at one time
-            $count=0; $i=0;
-            do {
-                
-                $query = $this->db->get($this->table_name,$steps,$offset+$steps*$count);
-                $count+=1;
-                 
-                 $qresult=$query->result() ;
-                foreach ($qresult as $row)
-                {
-                    $pcode_obj_second=$this->get_post_code_obj($row->postcode);
-                    
-                    $distance_n=$pcode_obj->Grid_N - $pcode_obj_second->Grid_N;
-                    $distance_e=$pcode_obj->Grid_E - $pcode_obj_second->Grid_E;
-
-                // CALCULATE THE DISTANCE BETWEEN THE TWO POINTS
-
-                    $hypot=sqrt(($distance_n*$distance_n)+($distance_e*$distance_e));
-                    $kms=round($hypot/1000,2);            
-                    
-                    if ($kms<$radius){
-                        $list[$i] = array( 'id' => $row->id,
-                            'uid' =>$row->uid,
-                            'make' => $row->make,
-                             'model' => $row->model,
-                            'activated' => $row->activated,
-                            'registration' => $row->registration,
-                            'year' => $row->year,
-                            'fuel_type' => $row->fuel_type,
-                            'transmission' => $row->transmission,
-                            'mileage' => $row->mileage,
-                            'price' => $row->price,
-                            'file_url_1' => $row->file_url_1,
-                            'file_url_2' => $row->file_url_2,
-                            'file_url_3' => $row->file_url_3,
-                            'file_url_4' => $row->file_url_4,
-                            'file_url_5' => $row->file_url_5,
-                            'created' =>$row->created,
-                            'desc' => $row->desc,); 
-                        //$list[$i]=(array) $row;
-
-                            $i++;
-
-                        }
-                    }
-            } while ($i<$number && $qresult);
-            
-            
+            foreach ($list as $row)
+            {                
+                if ($row['file_url_1']!="")
+                    $list[$i]['file_url_1']=HOST.UPLOAD_PATH.$row['file_url_1'];
+                if ($row['file_url_2']!="")
+                    $list[$i]['file_url_2']=HOST.UPLOAD_PATH.$row['file_url_2'];
+                if ($row['file_url_3']!="")
+                    $list[$i]['file_url_3']=HOST.UPLOAD_PATH.$row['file_url_3'];
+                if ($row['file_url_4']!="")
+                    $list[$i]['file_url_4']=HOST.UPLOAD_PATH.$row['file_url_4'];
+                if ($row['file_url_5']!="")
+                    $list[$i]['file_url_5']=HOST.UPLOAD_PATH.$row['file_url_5'];
+                $i++;
+            }
+        
             return $list;           
 	}
         
@@ -613,7 +614,7 @@ class Cars extends CI_Model
          * @message : message text
 	 * @return	array
 	 */
-	 function add_message_car($s_id,$r_id,$message)
+	 function add_message_car($s_id,$r_id,$message,$tbl_name)
 	{
              
             $this->db->set('sender_id', $s_id);
@@ -622,7 +623,7 @@ class Cars extends CI_Model
             $this->db->set('created', date('Y-m-d H:i:s'));
             
             
-            if ($this->db->insert($this->message_car_table_name)) {
+            if ($this->db->insert($tbl_name)) {
                    $msg_id = $this->db->insert_id();                                      
                    return $msg_id;
             }
@@ -639,14 +640,14 @@ class Cars extends CI_Model
          * @offset : offset of message
 	 * @return	array
 	 */
-	 function list_message_car($s_id,$r_id,$number,$offset)
+	 function list_message_car($s_id,$r_id,$number,$offset,$tbl_name)
 	{
             if ($s_id!="-1")
                 $this->db->where('sender_id', $s_id);
             if ($r_id!="-1")
                 $this->db->where('receiver_id', $r_id);
             
-            $query = $this->db->get($this->message_car_table_name,$number,$offset);
+            $query = $this->db->get($tbl_name,$number,$offset);
             
             $list=array(); $i=0;
             foreach ($query->result() as $row)
@@ -668,11 +669,11 @@ class Cars extends CI_Model
 	 * @param	int 
 	 * @return	void
 	 */
-	function remove_message_car_by_id($msg_id)
+	function remove_message_car_by_id($msg_id,$tbl_name)
 	{
             $this->db->where('id', $msg_id);
 
-            $this->db->delete($this->message_car_table_name);
+            $this->db->delete($tbl_name);
 	}
         
          /**
@@ -710,10 +711,12 @@ class Cars extends CI_Model
          * @offset : offset of message
 	 * @return	array
 	 */
-	 function list_offer_car($cid,$number,$offset)
+	 function list_offer_car($uid,$cid,$number,$offset)
 	{
-            
-            $this->db->where('cid', $cid);
+            if ($uid!=-1)
+                $this->db->where('uid', $uid);
+            if ($cid!=-1)
+                $this->db->where('cid', $cid);
                         
             $query = $this->db->get($this->offer_car_table_name,$number,$offset);
             
@@ -721,11 +724,12 @@ class Cars extends CI_Model
             foreach ($query->result() as $row)
             {
                 
-                $list[$i] = array( 'offer_id' => $row->id,
+                $list[$i] = array( 'offer_id' => $row->id,                        
+                        'cid' => $row->cid,
                         'msg' => $row->message,
                     'c_date' => $row->created,
                     'price' => $row->price,
-                    's_id' => $row->uid,
+                    'o_id' => $row->uid,
                 );
                 
                 $i++;                

@@ -1,7 +1,7 @@
 <?php
-class Comments extends CI_Model 
+class Watches extends CI_Model 
 {
-     private $tbl_name= 'comment_cars';
+     private $tbl_name= 'watch_cars';
 
      function &get_object_list( $start=0, $count=1000, $search_option='') {
 
@@ -55,10 +55,10 @@ class Comments extends CI_Model
     }
 	 //&get_object_list( $start=0, $count=1000, $search_option='') 
             
-     function list_comments($start,$count,$username)        
+     function list_watches($start,$count,$username)        
      {
          
-             $strSql = "SELECT count(*) as cnt  FROM comment_cars o ";
+             $strSql = "SELECT count(*) as cnt  FROM watch_cars o ";
              if ($username!="")
                  $strSql.=" inner join users up on (o.`uid`=up.`id` and LOWER(up.`username`) LIKE LOWER('%$username%')) ";
               $strSql.=" ORDER BY o.id DESC ";
@@ -67,7 +67,7 @@ class Comments extends CI_Model
             $row = $query->row_array();
             $return_arr['total'] = $row['cnt'];
             
-            $strSql = "SELECT o.*  FROM comment_cars o ";
+            $strSql = "SELECT o.*  FROM watch_cars o ";
             if ($username!="")
                  $strSql.=" inner join users up on (o.`uid`=up.`id` and LOWER(up.`username`) LIKE LOWER('%$username%')) ";
              $strSql.=" ORDER BY o.id DESC LIMIT $start, $count";

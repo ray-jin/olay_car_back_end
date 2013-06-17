@@ -9,6 +9,7 @@ class Comment extends CI_Controller
 		$this->load->library('security');
 		$this->load->library('tank_auth');
 		$this->load->model('comments');
+                $this->load->model('manage_m'); // a little different
                 $this->load->helper('url');
                 $this->load->library('form_validation');
                 
@@ -21,21 +22,32 @@ class Comment extends CI_Controller
 	}
         
 	function index()
-	{
+	{ 
+            if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
+            
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
 
-		$result = $this->comments->get_object_list($start_no,$per_page);
+                $data['username'] = isset($_REQUEST['username']) ? trim($_REQUEST['username']) : "" ;
+                $result = $this->comments->list_comments($start_no,$per_page,$data['username'] );
+                
 		$total_page = $result['total'];
 		$data['comment_list'] = $result['rows'];
 		
-		$base_url = site_url("backend/bcomment?a=1");
+		$base_url = site_url("admin/comment?a=1")."&username=".$data['username'];
+                
 		$data['pagenation'] = $this->comments->_create_pagenation($per_page, $total_page, $base_url);
-		$data['post_key'] = "bcomment";
-		$this->load->view('bcomment/bcomment_list_v',$data);	
+		$data['post_key'] = "comment";
+                $data['start_no'] =$start_no;
+		$this->load->view('comment/comment_list_v',$data);	
 	}
         
-        function bcomment_del() {
+        function comment_del() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
@@ -43,16 +55,22 @@ class Comment extends CI_Controller
 		}
 		$this->_proc_post_del($post_id);
 		
-		redirect("backend\bcomment");
+		redirect("admin\comment");
 	}
 	
-        function bcomment_add() {
+        function comment_add() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$data = $this->_proc_post_add();
-		$data['post_key'] = "bcomment";
-		$this->load->view('bcomment/bcomment_add_v', $data);
+		$data['post_key'] = "comment";
+		$this->load->view('comment/comment_add_v', $data);
 	}
         
-       function bcomment_edit() {		
+       function comment_edit() {	
+            if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select comment!";
@@ -60,9 +78,9 @@ class Comment extends CI_Controller
 		}
 		
 		$data = $this->_proc_post_edit($post_id);
-		$data['post_key'] = "bcomment";	
+		$data['post_key'] = "comment";	
 		$data['post'] = $this->comments->get_specific_data($post_id);
-		$this->load->view('bcomment/bcomment_edit_v', $data);
+		$this->load->view('comment/comment_edit_v', $data);
 	}
         
         private function &_proc_post_add() {
@@ -97,7 +115,7 @@ class Comment extends CI_Controller
 
                                 if($this->db->insert($tbl_name, $qry)){
                                 //	$data['show_message'] = "Successfully added!";
-                                        redirect("backend/bcomment");
+                                        redirect("admin/comment");
                                 }
 				
 			}			

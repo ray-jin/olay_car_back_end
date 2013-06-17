@@ -5,9 +5,11 @@
 		'admin\user'	=>	'Users',	
                 'admin\user_profile'	=>	'User Profile',
                 'admin\car'	=>	'Cars',
-                'admin\message'	=>	'Messages',
+                'admin\inbox'	=>	'Inbox Messages',
+                'admin\outbox' =>     'Outbox Messages',
                 'admin\offer'	=>	'Offers',
                 'admin\comment'	=>	'Comments',
+                'admin\watch'	=>	'Watches',
                 
 	);
         $config['max_count_per_page'] = 10;	

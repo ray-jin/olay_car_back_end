@@ -38,7 +38,7 @@
 		</ul>
 		<h3>Admin</h3>
 		<ul class="toggle">
-			<!--li class="icn_settings"><a href="options">Options</a></li-->
+						
 			<li class="icn_jump_back"><a href="javascript:confirm_logout()">Logout</a></li>
 		</ul>
 <?php

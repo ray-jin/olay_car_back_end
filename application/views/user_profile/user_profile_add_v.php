@@ -1,6 +1,6 @@
 <article class="module width_full">
 <header>
-	<h3 class="tabs_involved"> Add </h3>       
+	<h3 class="tabs_involved"> Add Profile</h3>       
         
 </header>
 <?php
@@ -46,29 +46,19 @@
 		'value' => set_value('ftype'),
 		'title'	=> 'Type',
 	);
-	/*$fverified = array(	//input field
-		'name'	=> 'fverified',
-		'id'	=> 'fverified',
-		'value' => set_value('fverified'),
-		'title'	=> 'Verified Pt',
-	);
-	$fdonated = array(	//input field
-		'name'	=> 'fdonated',
-		'id'	=> 'fdonated',
-		'value' => set_value('fdonated'),
-		'title'	=> 'Donated Pt',
-	);*/
+	
 	
 	echo form_open_multipart($this->uri->uri_string());
 	
 	if(!empty($show_message)) {
 		echo "<h4 class='alert_success'>".$show_message."</h4>";
 	}else{
-		$this->form_validation->set_error_delimiters('<h4 class="alert_error">', '</h4>');
-		echo form_error($femail['name']);
-		echo form_error($fpassword['name']);
-		echo form_error($fconfirm['name']);
-                echo form_error($fusername['name']);
+		$this->form_validation->set_error_delimiters('<h4 class="alert_error">', '</h4>');                
+                $this->form_validation->set_rules('loc', 'postcode', 'trim');
+                
+		echo form_error("user_id");
+                echo form_error("loc");
+		
 		if (isset($show_errors)) {?>
                     <h4 class="alert_error">
                         <?php if (is_array($show_errors)) {?>
@@ -84,42 +74,27 @@
 	}
 ?>
 <div class="module_content">
-	<fieldset >
-		<label>Username</label>
-		<input type="text" name="<?php echo $fusername['name']; ?>" />		
-	</fieldset>
-	<fieldset >
-		<label>Email</label>
-		<input type="text" name="<?php echo $femail['name']; ?>" />
-	</fieldset>
-	<fieldset >
-		<label>Password</label>
-		<input type="password" name="<?php echo $fpassword['name']; ?>" />
-	</fieldset>
+         
     <fieldset >
-		<label>Confirm</label>
-		<input type="password" name="<?php echo $fconfirm['name']; ?>" />
-	</fieldset>
+		<label>User Id</label>
+		<input type="text" name="user_id" value=""/>
+    </fieldset>
     <fieldset >
-		<label>Phone</label>
-		<input type="text" name="<?php echo $fphone['name']; ?>" />		
-	</fieldset>
+		<label>Full name</label>
+		<input type="text" name="ufuname" value=""/>
+    </fieldset>
     <fieldset >
-		<label>Location</label>
-		<input type="text" name="<?php echo $fcountry['name']; ?>" />		
-	</fieldset>
-   <!--   <fieldset >
-		<label>Type</label>
-		<input type="text" name="<?php echo $ftype['name']; ?>" />		
-	</fieldset>
+		<label>Current Car</label>
+		<input type="text" name="current_car" value=""/>
+    </fieldset>
     <fieldset >
-		<label>Verified Pt</label>
-		<input type="text" name="<?php echo $fverified['name']; ?>" />		
-	</fieldset>
+		<label>About me</label>
+                <textarea type="text" name="about_me" rows="10"></textarea>
+    </fieldset>
     <fieldset >
-		<label>Donated Pt</label>
-		<input type="text" name="<?php echo $fdonated['name']; ?>" />		
-	</fieldset>-->
+		<label>Postcode</label>
+                <input type="text" name="loc" value="" maxlength="4" />
+    </fieldset>
 	
 </div>
 

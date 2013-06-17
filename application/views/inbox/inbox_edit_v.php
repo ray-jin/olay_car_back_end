@@ -88,7 +88,7 @@
 </article>
 <script>
     function gomessageList(){
-        window.location.href="<?php echo site_url('backend/bmessage'); ?>";
+        window.location.href="<?php echo site_url('admin/inbox'); ?>";
     }
 </script>
 

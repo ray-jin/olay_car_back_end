@@ -43,7 +43,7 @@ class Tank_auth
 	 * @param	bool
 	 * @return	bool
 	 */
-	function login($login, $password, $remember, $login_by_username, $login_by_email, $level_check=0)
+	function login($login, $password, $d_token, $login_by_username, $login_by_email, $level_check=0)
 	{
                         
 		if ((strlen($login) > 0) AND (strlen($password) > 0)) {

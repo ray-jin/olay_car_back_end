@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-class Offer extends CI_Controller
+class outbox extends CI_Controller
 {
 	function __construct()
 	{
@@ -8,9 +8,9 @@ class Offer extends CI_Controller
 
 		$this->load->library('security');
 		$this->load->library('tank_auth');
-		$this->load->model('offers');
-                $this->load->helper('url');
+		$this->load->model('messages');
                 $this->load->model('manage_m'); // a little different
+                $this->load->helper('url');
                 $this->load->library('form_validation');
                 
 	}
@@ -28,21 +28,24 @@ class Offer extends CI_Controller
             }
 		$start_no = empty($_REQUEST['per_page'])? 0:$_REQUEST['per_page'];		
 		$per_page = $this->config->item('max_count_per_page');
-            
-                $data['username'] = isset($_REQUEST['username']) ? trim($_REQUEST['username']) : "" ;
-//		$result = $this->offers->get_object_list($start_no,$per_page);
-                $result = $this->offers->list_offers($start_no,$per_page,$data['username'] );
+
+                $data['sender_name'] = isset($_REQUEST['sender_name']) ? trim($_REQUEST['sender_name']) : "" ;
+                $data['receiver_name'] = isset($_REQUEST['receiver_name']) ? trim($_REQUEST['receiver_name']) : "" ;
+                                
+		//$result = $this->messages->list_messages(0,1000,$data['sender_name'] ,$data['receiver_name']);                
+                $result = $this->messages->list_messages($start_no,$per_page,$data['sender_name'],$data['receiver_name'],"outbox" );
+                
 		$total_page = $result['total'];
-		$data['offer_list'] = $result['rows'];
-		                
-		$base_url = site_url("admin/offer?a=1")."&username=".$data['username'];
-		$data['pagenation'] = $this->offers->_create_pagenation($per_page, $total_page, $base_url);
-		$data['post_key'] = "offer";
+		$data['message_list'] = $result['rows'];
+		
+		$base_url = site_url("admin/outbox?a=1")."&sender_name=".$data['sender_name']."&receiver_name=". $data['receiver_name'];
+		$data['pagenation'] = $this->messages->_create_pagenation($per_page, $total_page, $base_url);
+		$data['post_key'] = "outbox";
                 $data['start_no'] =$start_no;
-		$this->load->view('offer/offer_list_v',$data);	
+		$this->load->view('outbox/outbox_list_v',$data);	
 	}
         
-        function offer_del() {
+        function outbox_del() {
              if(!$this->tank_auth->is_logged_in()) {
                 redirect("auth/login");
             }
@@ -53,41 +56,40 @@ class Offer extends CI_Controller
 		}
 		$this->_proc_post_del($post_id);
 		
-		redirect("admin\offer");
+		redirect("admin\outbox");
 	}
 	
-        function offer_add() {
+        function outbox_add() {
              if(!$this->tank_auth->is_logged_in()) {
                 redirect("auth/login");
             }
 		$data = $this->_proc_post_add();
-		$data['post_key'] = "offer";
-		$this->load->view('offer/offer_add_v', $data);
+		$data['post_key'] = "outbox";
+		$this->load->view('outbox/outbox_add_v', $data);
 	}
         
-       function offer_edit() {	
+       function outbox_edit() {
             if(!$this->tank_auth->is_logged_in()) {
                 redirect("auth/login");
             }
-            
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
-			echo "select offer!";
+			echo "select message!";
 			return;
 		}
 		
 		$data = $this->_proc_post_edit($post_id);
-		$data['post_key'] = "offer";	
-		$data['post'] = $this->offers->get_specific_data($post_id);
-		$this->load->view('offer/offer_edit_v', $data);
+		$data['post_key'] = "outbox";	
+		$data['post'] = $this->messages->get_specific_data($post_id,"outbox");
+		$this->load->view('outbox/outbox_edit_v', $data);
 	}
         
         private function &_proc_post_add() {
 		$this->load->library('upload');
 		
-		$this->form_validation->set_rules('uid', 'User ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('cid', 'Car ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('price', 'price', 'is_natural|numeric|trim|required|xss_clean');                
+		$this->form_validation->set_rules('sender_id', 'Sender ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('receiver_id', 'Receiver ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('message', 'message', 'trim|required|xss_clean');                
 		
 		$qry = array();
 		$data = array();
@@ -95,8 +97,8 @@ class Offer extends CI_Controller
 		if ($this->form_validation->run())
 		{
 					
-			$tbl_name = "offer_cars";
-			$new_idx = $this->offers->get_next_insert_idx($tbl_name);
+			$tbl_name = "outbox";
+			$new_idx = $this->messages->get_next_insert_idx($tbl_name);
 		
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
 			
@@ -104,9 +106,8 @@ class Offer extends CI_Controller
                                         $qry,
                                         array(
                                                 'id'		=> $new_idx,						
-                                                'uid'  => $this->input->post('uid'),
-                                                'cid'	=> $this->input->post('cid'),
-                                                'price'	=> $this->input->post('price'),
+                                                'sender_id'  => $this->input->post('sender_id'),
+                                                'receiver_id'	=> $this->input->post('receiver_id'),                                                
                                                 'message'=> $this->input->post('message'),
                                                 'created' =>  date('Y-m-d H:i:s')
                                         )
@@ -114,7 +115,7 @@ class Offer extends CI_Controller
 
                                 if($this->db->insert($tbl_name, $qry)){
                                 //	$data['show_message'] = "Successfully added!";
-                                        redirect("admin/offer");
+                                        redirect("admin/outbox");
                                 }
 
 			}			
@@ -127,9 +128,9 @@ class Offer extends CI_Controller
     
        		$this->load->library('upload');
     	             
-                $this->form_validation->set_rules('uid', 'User ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('cid', 'Car ID', 'integer|trim|required|xss_clean');
-                $this->form_validation->set_rules('price', 'Price', 'is_natural|numeric|trim|required|xss_clean');
+                $this->form_validation->set_rules('sender_id', 'Sender ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('receiver_id', 'Receiver ID', 'integer|trim|required|xss_clean');
+                $this->form_validation->set_rules('message', 'message', 'trim|required|xss_clean');
                 
                 
 
@@ -139,7 +140,7 @@ class Offer extends CI_Controller
 		if ($this->form_validation->run())
 		{	
                 
-                    $tbl_name = "offer_cars";	
+                    $tbl_name = "outbox";	
 			if ( empty($data['show_errors']) || count($data['show_errors'])==0 ) {
 				
 
@@ -148,15 +149,14 @@ class Offer extends CI_Controller
 					$qry,
 					array(
 						'id'		=> $new_idx,
-						'cid'  => $this->input->post('cid'),
-						'uid'		=> $this->input->post('uid'),
-                                                'price' => $this->input->post('price'),
+						'sender_id'  => $this->input->post('sender_id'),
+						'receiver_id'=> $this->input->post('receiver_id'),
 						'message'	=> $this->input->post('message')
 					)
 				);
 				
 				$this->db->where('id', $new_idx);
-				$this->db->update($tbl_name, $qry);
+				$this->db->update("outbox", $qry);
 				
 				$data['show_message'] = "Successfully updated!";
 
@@ -168,7 +168,7 @@ class Offer extends CI_Controller
     } //end function
     
     private function _proc_post_del($idx) {    	
-            $strSql = "DELETE FROM offer_cars WHERE id='$idx' ";
+            $strSql = "DELETE FROM outbox WHERE id='$idx' ";
             $this->db->query($strSql);
     }
 }

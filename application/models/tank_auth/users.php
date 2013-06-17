@@ -198,7 +198,7 @@ class Users extends CI_Model
 
 		if ($this->db->insert($this->table_name, $data)) {
 			$user_id = $this->db->insert_id();
-			if ($activated)	$this->create_profile($user_id);
+			if ($activated)	$this->create_profile($user_id,"","","","","");
 			return array('user_id' => $user_id);
 		}
 		return NULL;
@@ -213,7 +213,7 @@ class Users extends CI_Model
 	 * @param	bool
 	 * @return	bool
 	 */
-	function activate_user($user_id, $activation_key, $activate_by_email)
+/*	function activate_user($user_id, $activation_key, $activate_by_email)
 	{
 		$this->db->select('1', FALSE);
 		$this->db->where('id', $user_id);
@@ -236,7 +236,7 @@ class Users extends CI_Model
 			return TRUE;
 		}
 		return FALSE;
-	}
+	}*/
 
 	/**
 	 * Purge table of non-activated users
@@ -436,9 +436,21 @@ class Users extends CI_Model
         
 	function update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$username,$img_del=true)
 	{
-            if (!$this->get_profile_by_userid($uid))
-                $this->create_profile ($uid);
-            
+            if (!$this->get_profile_by_userid($uid)){
+                $profile_id=$this->create_profile ($uid,$ufuname,$img_loc,$c_car,$a_me,$loc); // create profile                                    
+                if ($profile_id>0){
+                    $this->db->set('user_profile_id', $profile_id);  // update user with profile id
+                    $this->db->where('id', $uid);
+                    $this->db->update($this->table_name);
+                    return true;
+                }
+                else{
+                    return false;
+                }
+                
+                
+            }
+             
             $aprofile=$this->get_profile_by_userid($uid);
             
             $pfid=$aprofile->id; //get profileid;
@@ -448,19 +460,24 @@ class Users extends CI_Model
             
             //check whether delete the image file or not
             
-            if ($img_del==true && $aprofile->image_loc){ 
+            
+            if ($img_loc!=""){
+                if ($img_del==true && $aprofile->image_loc){ 
                  $tmp=UPLOAD_PATH."/".$aprofile->image_loc;
-                if (file_exists($tmp))
-                    unlink($tmp); //delete physical image file
-                
+                    if (file_exists($tmp))
+                        unlink($tmp); //delete physical image file
+
+                }
+                $this->db->set('image_loc', $img_loc);
             }
-            $this->db->set('image_loc', $img_loc);
+                
             $this->db->set('current_car', $c_car);
             $this->db->set('about_me', $a_me);
             $this->db->set('loc', $loc);
 
             $this->db->where('id', $pfid);
             $this->db->update($this->profile_table_name);
+            return true;
 	}
         /**
 	 * Update user login info, such as IP-address or login time, and
@@ -519,10 +536,22 @@ class Users extends CI_Model
 	 * @param	int
 	 * @return	bool
 	 */
-	 private function create_profile($user_id)
+	 public function create_profile($user_id,$ufuname,$img_loc,$c_car,$a_me,$loc)
 	{
-		$this->db->set('user_id', $user_id);
-		return $this->db->insert($this->profile_table_name);
+            $this->db->set('user_id', $user_id);
+            $this->db->set('ufuname', $ufuname);
+            $this->db->set('image_loc', $img_loc);
+            $this->db->set('current_car', $c_car);
+            $this->db->set('about_me', $a_me);
+            $this->db->set('loc', $loc);
+            $this->db->set('user_id', $user_id);
+            
+            if ($this->db->insert($this->profile_table_name)) {
+                    $profile_id = $this->db->insert_id();
+                    return $profile_id;
+            }
+                
+            return 0;
 	}
 
         /**

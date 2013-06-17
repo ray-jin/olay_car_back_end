@@ -11,10 +11,12 @@ $f_search = array(	//text field
     $this->form_validation->set_rules('radius', 'Radius', 'trim|integer');
     $this->form_validation->set_rules('number', 'Number', 'trim|integer');
     $this->form_validation->set_rules('offset', 'Offset', 'trim|integer');
-    $this->form_validation->set_rules('p_code', 'Postcode', 'trim|min_length[3]|max_length[4]');
+    $this->form_validation->set_rules('p_code', 'Postcode', 'trim|min_length[2]|max_length[4]');
     
-    
-    $validate=$this->form_validation->run();
+    if (count($_POST)==0)
+        $validate=true;
+    else
+        $validate=$this->form_validation->run();
 
     if(empty($show_message)) {
 	
@@ -130,11 +132,14 @@ $f_search = array(	//text field
                     <th>Transmission</th>
                     <th>Mileage</th>
                     <th>Uploaded</th>
+                    <th>Postcode</th>
+                    <th>Distance</th>
                     <th>Action</th>
                 </tr>
              </thead>
              <tbody>
             <?php
+            
             if ($validate==false){
                 $car_list=array();
                 
@@ -151,10 +156,7 @@ $f_search = array(	//text field
 
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
                 curl_setopt($ch, CURLOPT_URL, HOST."car/a_search");
-              //  uid=1&sid=b730ab214c71d29dd34a0105dc7c7499
-    //&make=&model=&s_price=250&e_price=400&p_code=AB1&radius=10&number=10&offset=2
-
-
+             
                 curl_setopt($ch, CURLOPT_POSTFIELDS, array('uid' => $user_id,
                                                             'sid' => $user->session_id,
                                                             'make' => $make,
@@ -167,17 +169,20 @@ $f_search = array(	//text field
                                                             'offset' => $offset));
                   $json= curl_exec($ch);
                   $result=  json_decode($json);
-
+                  
                   if ($result->status==FAIL){
                       echo "<div style='color:red'>".$result->error."</div>";
+                      $car_list=array();
                   }
-
+                  else{
+                      $car_list=$result->cars;
+                  }
                   
-                  $car_list=$result->cars;
                   
             }
             $i=0;
               $start_no=1;
+              
             foreach($car_list as $row) {
                 $user=$this->manage_m->get_specific_data($row->uid, "users");
             ?>
@@ -187,7 +192,7 @@ $f_search = array(	//text field
                     <td><?php echo $user['username'];?></td>
                      <td>
                         <?php if ($row->file_url_1): ?>
-                            <img src="<?php echo HOST.UPLOAD_PATH.$row->file_url_1;?>" alt="No Image" height="80" width="80">
+                            <img src="<?php echo $row->file_url_1;?>" alt="No Image" height="80" width="80">
                         <?php else: ?>
                             <div style='color:red'> No Image </div>
                         <?php endif ?>
@@ -204,7 +209,8 @@ $f_search = array(	//text field
                     <td>
                         <?php  $date = date_create($row->created); $datetime = $date->format('Y-m-d'); echo $datetime;?>
                     </td>
-                    
+                    <td><?php echo $row->postcode;?></td>
+                    <td><?php echo isset($row->dist) ? $row->dist : ""  ;?></td>
                     <td>
                         <input type="image" title="Edit" src="<?php echo IMG_DIR; ?>/icn_edit.png" onclick="goedit(<?php echo $row->id;?>)">
                         <input type="image" title="Trash" src="<?php echo IMG_DIR; ?>/icn_trash.png" onclick="confirm_del(<?php echo $row->id;?>)">

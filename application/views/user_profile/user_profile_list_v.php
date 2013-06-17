@@ -18,6 +18,9 @@ $f_search = array(	//text field
 <article class="module width_full">
     <header>
         <h3 class="tabs_involved"> User Profile List </h3>
+        <div class="submit_link">
+           <input type="submit" value="Add" class="alt_btn" onclick="return post_add()" />
+        </div>
     </header>
 
     <div class="tab_container">
@@ -82,7 +85,7 @@ $f_search = array(	//text field
 
     <script type="text/javascript">
             function post_add() {
-                    window.location.href = "<?php echo site_url("$post_key"."/".$post_key."_add"); ?>";
+                    window.location.href = "<?php echo site_url("admin/"."$post_key"."/".$post_key."_add"); ?>";
                     return false;
             }
             function confirm_del(pid) {

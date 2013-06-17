@@ -1,0 +1,80 @@
+<form action="car/update_car2"
+enctype="multipart/form-data" method="post">
+    <p>
+userid :<br>
+<input type="text" name="uid" size="30" value="64">
+</p>
+
+<p>
+sessionid :<br>
+<input type="text" name="sid" size="30" value="bad77afd762b502f0dd276cd166e741a">
+</p>
+
+<p>
+carid :<br>
+<input type="text" name="cid" size="30" value="97">
+</p>
+
+ <table style="width: 100%;">
+         
+        <tr>
+            <td> Registration : </td>
+            <td>   <input type="text" style="width:150px;" name="registration" value=""/> &nbsp; </td>
+            <td> Price : </td>
+            <td>   <input type="text" style="width:150px; text-align: right;" size="15"  name="price" value=""  /> &nbsp; </td>
+            
+            <td> Make : </td>
+            <td>   <input type="text" style="width:150px;" size="15" name="make" value="" /> &nbsp; </td>
+            <td> Model : </td>
+            <td>   <input type="text" style="width:150px;" size="15" name="model" value="" /> &nbsp; </td>
+        </tr>
+        <tr>
+            <td> Year : </td>
+            <td>   <input type="text" style="width:150px; text-align: right;" size="15" maxlength="4" name="year" value="" /> &nbsp; </td>
+            <td> Fuel Type : </td>
+            <td>   <input type="text"  name="fuel_type" value=""/> &nbsp; </td>
+            <td> Transmission : </td>
+            <td>   <input type="text" size="15" style="width:150px;"  name="transmission" value=""  /> &nbsp; </td>
+            <td> Mileage : </td>
+            <td>   <input type="text" size="15" name="mileage" style="width:150px; text-align: right;" value="" /> &nbsp; </td>
+        </tr> 
+        <tr>
+            <td> Postcode : </td>
+            <td>   <input type="text" size="15" maxlength="4" name="postcode" value=""  /> &nbsp; </td> 
+        </tr>
+        <tr>
+            <td colspan="8">
+                Description
+            </td>
+        </tr>
+        <tr>
+            <td colspan="8">
+                <textarea name="desc" id="desc" rows="10" style="width:98%;" ></textarea>
+            </td>
+        </tr>
+    </table>
+
+<p>
+Please specify a file, or a set of files:(1)<br>
+<input type="file" name="file_url_1" accept="image/*,video/*" />
+</p>
+<p>
+Please specify a file, or a set of files:(2)<br>
+<input type="file" name="file_url_2" accept="image/*,video/*" />
+</p>
+<p>
+Please specify a file, or a set of files:(3)<br>
+<input type="file" name="file_url_3" accept="image/*,video/*" />
+</p>
+<p>
+Please specify a file, or a set of files:(4)<br>
+<input type="file" name="file_url_4" accept="image/*,video/*" />
+</p>
+<p>
+Please specify a file, or a set of files:(5)<br>
+<input type="file" name="file_url_5" accept="image/*,video/*" />
+</p>
+<div>
+<input type="submit" value="Send">
+</div>
+</form>

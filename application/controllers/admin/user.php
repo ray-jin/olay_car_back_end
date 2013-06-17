@@ -42,7 +42,7 @@ class User extends CI_Controller
 		$total_page = $result['total'];
 		$data['user_list'] = $result['rows'];
 		
-		$base_url = site_url("user?a=1");
+		$base_url = site_url("user?a=1")."&s_username=".$data['s_username'];
 		$data['pagenation'] = $this->manage_m->_create_pagenation($per_page, $total_page, $base_url);
 		$data['post_key'] = "user";
                
@@ -51,12 +51,18 @@ class User extends CI_Controller
 	}
 	
 	function user_add() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$data = $this->_proc_post_add();
 		$data['post_key'] = "user";
 		$this->load->view('user/user_add_v', $data);
 	}
 		
-	function user_edit() {		
+	function user_edit() {	
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select task!";
@@ -70,6 +76,9 @@ class User extends CI_Controller
 	}
 		
 	function user_del() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
             $post_id = $this->uri->segment(4, 0);
             if (empty($post_id)) {
                     echo "select task!";

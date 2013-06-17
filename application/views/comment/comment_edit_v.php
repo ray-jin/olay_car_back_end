@@ -88,7 +88,7 @@
 </article>
 <script>
     function goCommentList(){
-        window.location.href="<?php echo site_url('backend/bcomment'); ?>";
+        window.location.href="<?php echo site_url('admin/comment'); ?>";
     }
 </script>
 

@@ -5,14 +5,14 @@
 </header>
 <?php
 	
-        $offer_id = array(	//id of offer id
+        $comment_id = array(	//id of comment id
 		'name'	=> 'id',
 		'id'	=> 'id',
 		'value' => set_value('id'),
-		'title'	=> 'offer ID',
+		'title'	=> 'Comment ID',
 	);
          
-        $user_id = array(//id of user id
+        $user_id = array(	//id of user id
 		'name'	=> 'uid',
 		'id'	=> 'uid',
 		'value' => set_value('uid'),
@@ -25,17 +25,11 @@
 		'value' => set_value('cid'),
 		'title'	=> 'Car ID',
 	);
-        $price = array(	//id of user id
-		'name'	=> 'price',
-		'id'	=> 'price',
-		'value' => set_value('price'),
-		'title'	=> 'Price',
-	);
-        $message = array(	//id of user id
-		'name'	=> 'message',
-		'id'	=> 'message',
-		'value' => set_value('message'),
-		'title'	=> 'M',
+        $comment = array(	//id of user id
+		'name'	=> 'comment',
+		'id'	=> 'comment',
+		'value' => set_value('comment'),
+		'title'	=> 'Comment',
 	);
 	
 	
@@ -47,8 +41,8 @@
 		$this->form_validation->set_error_delimiters('<h4 class="alert_error">', '</h4>');
 		echo form_error($user_id['name']);
 		echo form_error($car_id['name']);
-                echo form_error($price['name']);
-        
+              
+                
 		if (isset($show_errors)) {?>
                     <h4 class="alert_error">
                         <?php if (is_array($show_errors)) {?>
@@ -65,29 +59,21 @@
 ?>
 
 <div class="module_content">
-    <input type="hidden" name="<?php echo $offer_id['name']; ?>" value="<?php echo $post['id'] ?>"/>
+    <input type="hidden" name="<?php echo $comment_id['name']; ?>" value="<?php echo $post['id'] ?>"/>
     <fieldset >
             <label>User ID (Readonly)</label>
             <input type="text" name="<?php echo $user_id['name']; ?>" value="<?php echo $post['uid'] ?>" readonly="readonly"/>
     </fieldset>
     <fieldset >
-            <label>Car ID (readonly)</label>
+            <label>Car ID (Readonly)</label>
             <input type="text" name="<?php echo $car_id['name']; ?>" value="<?php echo $post['cid'] ?>" readonly="readonly"/>		
-    </fieldset>
-    <fieldset >
-            <label>Price</label>
-            <input type="text" name="<?php echo $price['name']; ?>" value="<?php echo $post['price'] ?>" />
-    </fieldset>
-    <fieldset >
-            <label>Message</label>
-            <textarea name="<?php echo $message['name']; ?>" style="height: 50px;"><?php echo $post['message'] ?></textarea>
-    </fieldset>
-    
+	</fieldset>    
+	
 </div>
 <footer>
 	<div class="submit_link">            
           
-            <input type="submit" value="Update" class="alt_btn"> <input type="button" value="Cancel" class="alt_btn" onclick="javascript:goOfferList();"> 
+            <input type="submit" value="Update" class="alt_btn"> <input type="button" value="Cancel" class="alt_btn" onclick="javascript:goCommentList();"> 
            
 	</div>
 </footer>
@@ -95,8 +81,8 @@
 
 </article>
 <script>
-    function goOfferList(){
-        window.location.href="<?php echo site_url('admin/offer'); ?>";
+    function goCommentList(){
+        window.location.href="<?php echo site_url('admin/watch'); ?>";
     }
 </script>
 

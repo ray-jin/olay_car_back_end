@@ -12,6 +12,7 @@ class Api extends CI_Controller
 		$this->load->model('manage_m');
                 $this->load->model('manage_m/users');
                 $this->load->helper('url');
+                $this->load->model('cars');
 	}
 	
 	function index()
@@ -56,11 +57,10 @@ class Api extends CI_Controller
                             $result['status'] =  $this->config->item('success'); //succeed                    
                             
                     } else {
-                            $result['uid'] = $this->config->item('fail'); 
-                            $result['sid'] = "";
+                            
                             $result['status'] = $this->config->item('fail'); //fail
                             $errors = $this->tank_auth->get_error_message();
-                            $result['error']="Error occured";  
+                            $result['error']=$errors['message'];  
                             //$result['status'] = $this->config->item('register_duplicate_umail'); // duplicate facebook id or mail or username
                     }
             }
@@ -98,7 +98,7 @@ class Api extends CI_Controller
                     $umail,
                     $upass,
                     $d_token,
-                    false,
+                    true,
                     true,
                     true)) {
                     
@@ -125,8 +125,7 @@ class Api extends CI_Controller
 	 * Login user on the site 
 	 * @umail : userid or mail address
          * @fname : facebook id
-         * @uname : username
-         * @upass : password
+         * @uname : username         
          * @d_token : device token
          * on sucess uid>0 on fail uid=-1
          * 
@@ -135,11 +134,9 @@ class Api extends CI_Controller
 	 */
 	function login_user_f() { //facebook login
            
-            $result = array('uid'=>'','sid'=>'');
+            $result = array();
             
-            if (!isset($_GET['fname']) || !isset($_GET['d_token'])) {
-                    $result['uid'] = "-1";
-                    $result['sid']="";
+            if (!isset($_GET['fname']) || !isset($_GET['d_token'])) {                   
                     $result['status']=$this->config->item('fail'); 
                     $result['error'] = $this->config->item('invalid_params');
                     
@@ -154,8 +151,7 @@ class Api extends CI_Controller
             $umail=isset($_GET['umail']) ? $_GET['umail']: '';
             $uname=isset($_GET['uname']) ? $_GET['uname']: '';
             $upass=isset($_GET['upass']) ? $_GET['upass']: '';
-            
-                       
+
             if ($this->tank_auth->login_f($umail,$fname,$uname,$upass,$d_token)) {
                 
                     
@@ -167,12 +163,10 @@ class Api extends CI_Controller
                                         
             }
             else { // 
-                
-                    $result['uid'] = "-1";
-                    $result['sid'] = "";
+                                    
                     $result['status'] = $this->config->item('fail'); 
                     $errors = $this->tank_auth->get_error_message();                         
-                    $result['error']="Incorrect Username or Password";
+                    $result['error']=$errors['message'];// "Incorrect Username or Password";
               
             }
             echo json_encode($result);
@@ -204,7 +198,7 @@ class Api extends CI_Controller
          */
 	function update_user() {
             
-            $config['upload_path'] = $this->config->item('upload_path');
+            $config['upload_path'] = UPLOAD_PATH;
             
             $config['allowed_types'] = 'gif|jpg|png';
             $config['max_size']	= $this->config->item('max_img_size'); //2MB
@@ -225,28 +219,39 @@ class Api extends CI_Controller
         //    if($auser)
           //      $config['upload_path'].="\\".$auser->username;
             
-            if ( !$this->upload->do_user_profile_upload($auser->username))
-            {
-              
-                $error = array('error' => $this->upload->display_errors("",""));                    
-                $result['status'] = $this->config->item('fail');                    
-                $result['error'] = $error['error'];
-                    
+            if ($_FILES['userfile']['size']>0){
+                 if ( !$this->upload->do_user_profile_upload($auser->username))
+                {
+                    $error = array('error' => $this->upload->display_errors("",""));                    
+                    $result['status'] = $this->config->item('fail');                    
+                    $result['error'] = $error['error'];
+                    echo json_encode($result);
+                    return;
+                }
+                $img_loc=$auser->username."/profile/".$this->upload->file_name;
             }
-            else //success
-            {
+            else{
+                $img_loc="";
+            }
+           
+           
                                    
-                  $ufuname=$_POST['ufuname'];
-                  $c_car=$_POST['c_car'];
-                  $a_me=$_POST['a_me'];
-                  $loc=$_POST['loc'];
-                  $img_loc=$this->upload->file_name;
-                  
-                  $this->users->update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$auser->username);
-//                  $this->users->del
-                  $result['status'] = $this->config->item('success');
-                  
+            $ufuname=$_POST['ufuname'];
+            $c_car=$_POST['c_car'];
+            $a_me=$_POST['a_me'];
+            $loc=$_POST['loc'];
+            //$img_loc=$this->upload->file_name;
+
+
+            if ($this->users->update_user_profile($uid,$ufuname,$c_car,$a_me,$loc,$img_loc,$auser->username)){
+                $result['status'] = $this->config->item('success');
             }
+            else{
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Error occured";
+            }
+//                  $this->users->del                                    
+            
             echo json_encode($result);
 	}
         
@@ -294,7 +299,7 @@ class Api extends CI_Controller
                 $result['ufuname'] = $aprofile->ufuname;
                 $result['c_car'] = $aprofile->current_car;
                 $result['loc'] = $aprofile->loc;
-                $result['img_loc'] = base_url()."//".$this->config->item('upload_path')."//".$aprofile->image_loc;
+                $result['img_loc'] = base_url()."/".UPLOAD_PATH."/".$aprofile->image_loc;
                 //$result['url'] = base_url()."//". $this->config->item('upload_path')."//".$file_loc_array[0]["img_loc"];
                 $result['a_me'] = $aprofile->about_me;
                 
@@ -374,6 +379,17 @@ class Api extends CI_Controller
             echo $result;
             
            // return $result;
+        }
+        
+           /*
+         * 
+         */
+         function list_postcodes() {    	
+            
+            $result['status'] = $this->config->item('success');
+            $result['postcodes']= $this->cars->list_postcodes();
+                        
+            echo json_encode($result);            
         }
 	
 }

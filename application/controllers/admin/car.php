@@ -44,23 +44,32 @@ class Car extends CI_Controller
 	}
         
         function car_del() {
-		$post_id = $this->uri->segment(4, 0);
-		if (empty($post_id)) {
-			echo "select task!";
-			return;
-		}
-		$this->cars->delete_car($post_id);
-		redirect("admin\car");                
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
+            $post_id = $this->uri->segment(4, 0);
+            if (empty($post_id)) {
+                    echo "select task!";
+                    return;
+            }
+            $this->cars->delete_car($post_id);
+            redirect("admin\car");                
             
         }
 	
         function car_add() {
+             if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
             $data = $this->_proc_post_add();
             $data['post_key'] = "car";
             $this->load->view('car/car_add_v', $data);
 	}
         
-       function car_edit() {		
+       function car_edit() {	
+            if(!$this->tank_auth->is_logged_in()) {
+                redirect("auth/login");
+            }
 		$post_id = $this->uri->segment(4, 0);
 		if (empty($post_id)) {
 			echo "select car!";
@@ -107,10 +116,7 @@ class Car extends CI_Controller
                                         $data['show_errors'] = "Error occured";
                                     }
                                 }
-                                
-                                
-                                
-                                
+                           
 			}			
 		}//end run
 		
@@ -131,6 +137,7 @@ class Car extends CI_Controller
                 $this->form_validation->set_rules('mileage', 'Mileage', 'trim|integer|greater_than[-1]');
                 $this->form_validation->set_rules('make', 'Make', 'trim');
                 $this->form_validation->set_rules('desc', 'Description', 'trim');
+                $this->form_validation->set_rules('postcode', 'Postcode', 'trim|min_length[2]|max_length[4]');
 
                 $qry = array();
 		$data = array();
@@ -178,16 +185,18 @@ class Car extends CI_Controller
                                     if ($this->cars->update_car2($new_idx,$this->input->post('make')
                                             ,$this->input->post('model'),$this->input->post('year'),
                                             $this->input->post('fuel_type'),$this->input->post('transmission'),
-                                            $this->input->post('mileage'), $this->input->post('desc'), $fnames,$auser->username,$this->input->post('activated'))){
+                                            $this->input->post('mileage'), $this->input->post('desc'), $fnames,$auser->username,
+                                            $this->input->post('activated'),$this->input->post('postcode'),
+                                            $this->input->post('registration'),$this->input->post('postcode'))){
                                         //redirect("admin/car");                                                
                                         $data['show_message'] = "Successfully updated!";
                                     }
                                     else{
-                                        $data['show_errors'] = "File upload error occured";
+                                        $data['show_errors'] = "Updating error";
                                     }
                                 }
                                 else{
-                                    $data['show_errors'] = "Error occured";
+                                    $data['show_errors'] = "Error occured while uploading";
                                 }
                                 
                                 

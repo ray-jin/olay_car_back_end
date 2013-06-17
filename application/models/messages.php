@@ -18,9 +18,9 @@ class Messages extends CI_Model
 		return $return_arr;
 	}
 	
-	function &get_specific_data($idx) {
+	function &get_specific_data($idx,$tbl_name) {
             
-            $strSql = "SELECT * FROM $this->tbl_name WHERE id='$idx'";
+            $strSql = "SELECT * FROM $tbl_name WHERE id='$idx'";
             
             $query = $this->db->query($strSql);
             $row = $query->row_array();
@@ -54,7 +54,43 @@ class Messages extends CI_Model
 		return $pagenation;
     }
 	
-	
-	
+        /**
+        * get list of cars watched by user
+        *	 
+        * @number : number of results
+        * @offset : start index
+        * @showall : 1 -> by any user, 0 -> by this user only, default is 1
+        */
+    
+    //&get_object_list( $start=0, $count=1000, $search_option='') 
+            
+        function list_messages($start,$count,$sender_name,$receiver_name,$tbl_name,$showall=1)
+       {
+            
+            $strSql = "SELECT count(*) as cnt  FROM $tbl_name m ";
+             if ($sender_name!="")
+                 $strSql.=" inner join users up on (m.`sender_id`=up.`id` and LOWER(up.`username`) LIKE LOWER('%$sender_name%')) ";
+             if ($receiver_name!="")
+                 $strSql.=" inner join users up1 ON (m.`receiver_id`=up1.`id` AND LOWER(up1.`username`) LIKE LOWER('%$receiver_name%')) ";   
+            $strSql.=" ORDER BY m.id DESC ";    
+            
+            $query = $this->db->query($strSql);		
+            $row = $query->row_array();
+            $return_arr['total'] = $row['cnt'];           
+            
+            $strSql = "SELECT m.*   FROM $tbl_name m ";
+             if ($sender_name!="")
+                 $strSql.=" inner join users up on (m.`sender_id`=up.`id` and LOWER(up.`username`) LIKE LOWER('%$sender_name%')) ";
+             if ($receiver_name!="")
+                 $strSql.=" inner join users up1 ON (m.`receiver_id`=up1.`id` AND LOWER(up1.`username`) LIKE LOWER('%$receiver_name%')) ";   
+            $strSql.=" ORDER BY m.id DESC LIMIT $start, $count";    
+            
+            $query = $this->db->query($strSql);
+            $return_arr['rows'] = $query->result_array();
+
+            return $return_arr;
+
+       }
+
 	
 }

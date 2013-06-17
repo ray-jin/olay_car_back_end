@@ -11,7 +11,7 @@ class Car extends CI_Controller
 		$this->load->model('cars');
                 $this->load->helper('url');
                 $this->load->helper('email');
-                //$this->load->model('manage_m/users');
+                $this->load->model('manage_m'); // a little different
 	}
 	
 	function index()
@@ -47,32 +47,33 @@ class Car extends CI_Controller
                 return;
             }
             $auser= $this->users->get_user_by_id($uid, true);
-        //    if($auser)
-          //      $config['upload_path'].="\\".$auser->username;
-            $fnames=$this->upload->do_multi_upload_car($auser->username);
-            if ( !$fnames) //error;
+        
+            $tbl_name = "cars";
+            $new_idx = $this->manage_m->get_next_insert_idx($tbl_name);
+            $fnames=$this->upload->do_multi_upload_car($auser->username,$new_idx);
+            
+            if (is_array($fnames))
             {
-              
-                $error = array('error' => $this->upload->display_errors("",""));                    
-                $result['status'] = $this->config->item('fail');
-                $result['cid'] = $this->config->item('fail');
-                $result['error'] = $error['error'];
-                    
+                $registration=$_POST['registration'];
+                $postcode=$_POST['postcode'];
+                $price=$_POST['price'];                 
+ 
+                $result['cid'] = $this->cars->create_car($uid,$registration,$price,$fnames,$auser->username,$new_idx,$postcode);                
+
+                if ($result['cid']!=-1){
+                    $result['status'] = $this->config->item('success');
+                }
+                else{
+                    $data['show_errors'] = "Error occured";
+                }
             }
-            else //success
-            {
-                                   
-                  $registration=$_POST['registration'];
-                  $price=$_POST['price'];                 
-                 
-                  //$this->users->update_user_profile($uid,$ufuname,$c_car,$a_me,$region,$img_loc);
-                  //Insert info in to database and image locations into car_imgs tables
-                //  $fnames=$auser->username."//".$fnames;
-                  $result['cid'] = $this->cars->create_car($uid,$registration,$price,$fnames,$auser->username);
-                  $result['status'] = $this->config->item('success');
-                  
-                  
+            else{
+                 $error = array('error' => $this->upload->display_errors("",""));                    
+                 $result['status'] = $this->config->item('fail');
+                 $result['error'] = $error['error'];
             }
+           
+         
             echo json_encode($result);
 	}
         
@@ -101,32 +102,67 @@ class Car extends CI_Controller
             $uid=$_REQUEST['uid'];
             $sid=$_REQUEST['sid'];
             $cid=$_REQUEST['cid'];
-            
-            
+                        
             if (!is_numeric ($uid) || !$this->tank_auth->is_valid_session($uid,$sid)){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_session');
                 echo json_encode($result);
                 return;
             }
+            
+            $this->load->library('upload');
+            $this->upload->set_allowed_types('*');
+            $this->upload->set_upload_path(UPLOAD_PATH);
+            $this->upload->set_max_filesize($this->config->item('max_img_size'));
+			
+            $auser= $this->users->get_user_by_id($uid);
+            $fnames=array("","","","","","","");
+            $img_del=array();
 
-            if (!is_null($data = $this->cars->update_car2(
-                    $cid,
-                    $_REQUEST['make'],
-                    $_REQUEST['model'],
-                    $_REQUEST['year'],
-                    $_REQUEST['f_type'],
-                    $_REQUEST['trans'],
-                    $_REQUEST['m_age'],
-                    $_REQUEST['desc']))) {                    
-                        $result['status'] = $this->config->item('success');
+            if ( $this->upload->do_car_file_upload($auser->username,$cid,"file_url_1"))
+            {
+                 $fnames[1]=$this->upload->file_name;
+                 $img_del[1]=true;
+            }  
+            if ( $this->upload->do_car_file_upload($auser->username,$cid,"file_url_2"))
+            {
+                 $fnames[2]=$this->upload->file_name;
+                 $img_del[2]=true;
+            }
+            if ( $this->upload->do_car_file_upload($auser->username,$cid,"file_url_3"))
+            {
+                 $fnames[3]=$this->upload->file_name;
 
-                } 
-                else {
-                    $result['status'] = $this->config->item('fail');                        
-                    $result['error'] = $this->config->item('unknown_error');
-                       
+            }
+            if ( $this->upload->do_car_file_upload($auser->username,$cid,"file_url_4"))
+            {
+                 $fnames[4]=$this->upload->file_name;
+
+            }
+            if ( $this->upload->do_car_file_upload($auser->username,$cid,"file_url_5"))
+            {
+                 $fnames[5]=$this->upload->file_name;
+
+            }
+            if (is_array($fnames)){                               
+                if ($this->cars->update_car2($cid,$_REQUEST['make']
+                        ,$_REQUEST['model'],$_REQUEST['year'],$_REQUEST['fuel_type'],$_REQUEST['transmission']
+                        ,$_REQUEST['mileage'],$_REQUEST['desc'], $fnames,$auser->username,"1",$_REQUEST['postcode']
+                        ,$_REQUEST['registration'],$_REQUEST['price'])){
+                    //redirect("admin/car");                                                
+                    $result['status'] = $this->config->item('success');
                 }
+                else{
+                    $result['status'] = $this->config->item('fail');
+                    $result['error'] = "Updating error";
+                }
+            }
+            else{
+                 $result['status'] = $this->config->item('fail');
+                 $result['error'] = "File uploading error";
+            }
+
+           
             echo json_encode($result);
 	}
 	/*
@@ -148,12 +184,19 @@ class Car extends CI_Controller
             $cid=$_REQUEST['cid'];
             
             if (!is_numeric ($uid) || !$this->tank_auth->is_valid_session($uid,$sid)){
-                $result['cid'] = $this->config->item('fail');
+                $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_session');
                 echo json_encode($result);
                 return;
             }
             
+            $car=$this->cars->get_car_by_id($cid);
+            if ( ($car==null) || $car->uid!=$uid)  {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Car doesn't exist or not correct owner";
+                echo json_encode($result);
+                return;
+            }
             $this->cars->delete_car($cid);
             $result['status'] = $this->config->item('success');              
 
@@ -174,7 +217,7 @@ class Car extends CI_Controller
             } 
             
             $uid=$_REQUEST['uid'];
-            $sid=$_REQUEST['sid'];            
+            $sid=$_REQUEST['sid'];
             
             if (!is_numeric ($uid) || !$this->tank_auth->is_valid_session($uid,$sid)){
                 $result['status'] = $this->config->item('fail');
@@ -205,7 +248,17 @@ class Car extends CI_Controller
             }
                 
             $uid=$_REQUEST['uid'];
-            $watch_car_id=$this->cars->add_watch_car($_REQUEST['cid'],$uid);
+            $cid=$_REQUEST['cid'];
+            
+            $car=$this->cars->get_car_by_id($cid);
+            if ( $car==null )   {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Car doesn't exist";
+                echo json_encode($result);
+                return;
+            }
+            
+            $watch_car_id=$this->cars->add_watch_car($cid,$uid);
             if ($watch_car_id==-1){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('failed');
@@ -309,51 +362,53 @@ class Car extends CI_Controller
             echo json_encode($result);	            
         }
         
-          /*
-         * @uid : user id
+          /*         
+           * @uid : user id
          * @sid : session id
          * @number : car id         
          * increase number of visitors for this specific car.
          */
          function get_car_detail() {    	
-           
+            if (!$this->check_car_session())
+                return;
             if( !isset($_REQUEST['cid'])){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
-            $cid=$_REQUEST['cid'];
+            $cid=$_REQUEST['cid']; $uid=$_REQUEST['uid'];
             
             $acar= $this->cars->get_car_by_id($cid);
-            //incrase the number of visitors of the car
-            if (!$acar ||  !$this->cars->inc_num_visitors($cid,$acar->num_visitors+1)){
+            
+            if ($acar==null){
                 $result['status'] = $this->config->item('fail');
-                $result['error'] = $this->config->item('not_exist');
+                $result['error'] = "Car does not exist.";
+                echo json_encode($result);
+                return;
             }
-            else{
-                $result['price']=$acar->price;
-                $result['make']=$acar->make;
-                $result['model']=$acar->model;
-                $result['mileage']=$acar->mileage;
-                $result['year']=$acar->year;
-                $result['transmission']=$acar->transmission;
-                //get Image or video url
+            
+            if ($acar->uid!=$uid)
+                $this->cars->inc_num_visitors($cid,$acar->num_visitors+1);
+            //incrase the number of visitors of the car
+            
+            $result['price']=$acar->price;
+            $result['make']=$acar->make;
+            $result['model']=$acar->model;
+            $result['mileage']=$acar->mileage;
+            $result['year']=$acar->year;
+            $result['transmission']=$acar->transmission;
+            if ($acar->file_url_1!="")
+                $result['file_url_1']=HOST.UPLOAD_PATH.$acar->file_url_1;
+            if ($acar->file_url_2!="")
+                $result['file_url_2']=HOST.UPLOAD_PATH.$acar->file_url_2;
+            if ($acar->file_url_3!="")
+                $result['file_url_3']=HOST.UPLOAD_PATH.$acar->file_url_3;
+            if ($acar->file_url_4!="")
+                $result['file_url_4']=HOST.UPLOAD_PATH.$acar->file_url_4;
+            if ($acar->file_url_5!="")
+                $result['file_url_5']=HOST.UPLOAD_PATH.$acar->file_url_5;
                 
-                //$result['url']=$acar->
-                $file_loc_array=$this->cars->list_car_img_loc($acar->id);
-                
-                if (sizeof($file_loc_array)>0) {
-                    $result['url'] = base_url()."//". $this->config->item('upload_path')."//".$file_loc_array[0]["img_loc"];
-                    
-                }
-                else
-                {
-                    $result['url']="";
-                }
-  
-            }
-    
             echo json_encode($result);
         }
         
@@ -372,7 +427,7 @@ class Car extends CI_Controller
             
              if (!$this->check_car_session())
                 return;
-             
+            
             if( !isset($_REQUEST['number'])){
                 $result['status'] =$this->config->item('fail');          
                 $result['error'] = $this->config->item('invalid_params');
@@ -390,8 +445,21 @@ class Car extends CI_Controller
             $p_code= (isset($_REQUEST['p_code'])) ? $_REQUEST['p_code'] : "";
             $radius= (isset($_REQUEST['radius'])) ? $_REQUEST['radius'] : 9999999999;
             //$loc=$_REQUEST['loc'];            
+            $pcode_obj=null;
+            if ($p_code!=""){
+                $pcode_obj=$this->cars->get_post_code_obj($p_code);         
+                if ($pcode_obj==null){
+                    $result['status'] =$this->config->item('fail');          
+                    $result['error'] = "Postcode is not correct";
+                    echo json_encode($result);
+                    return;
+                }
+                    
+            }
+            
+            
             $result['status'] = $this->config->item('success');
-            $result['cars']= $this->cars->a_search_list($make,$model,$s_price,$e_price,$p_code,$radius,$number,$offset,$uid);
+            $result['cars']= $this->cars->a_search_list($make,$model,$s_price,$e_price,$pcode_obj,$radius,$number,$offset,$uid);
             
             echo json_encode($result);	
             
@@ -418,6 +486,14 @@ class Car extends CI_Controller
             $uid=$_REQUEST['uid'];
             $cid=$_REQUEST['cid'];
             $comment=$_REQUEST['comment'];
+            
+            $car=$this->cars->get_car_by_id($cid);            
+            if ( $car==null )   {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Car doesn't exist";
+                echo json_encode($result);
+                return;
+            }
             
             $comm_id=$this->cars->add_comment_car($cid,$uid,$comment);
             
@@ -488,7 +564,17 @@ class Car extends CI_Controller
                 return;
             }
                 
-            $comm_id=$_REQUEST['comm_id']; $uid=$_REQUEST['uid'];
+            $uid=$_REQUEST['uid'];
+            $comm_id=$_REQUEST['comm_id'];             
+            
+            $comment=$this->cars->get_comment_by_id($comm_id);
+            if ( ($comment==null) || $comment->uid!=$uid)  {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Comment doesn't exist or not correct owner";
+                echo json_encode($result);
+                return;
+            }
+            
             $this->cars->remove_comment_car_by_id($comm_id);         
             
             $result['status'] = $this->config->item('success');
@@ -516,10 +602,22 @@ class Car extends CI_Controller
           
             
             $uid=$_REQUEST['uid']; $r_id=$_REQUEST['r_id'];
-            $msg_id=$this->cars->add_message_car($_REQUEST['uid'],$_REQUEST['r_id'],$_REQUEST['msg']);
             
-            $result['status'] = $this->config->item('success'); 
-            $result['msg_id'] = $msg_id;
+            $receiver_user= $this->users->get_user_by_id($r_id,true);
+            $sender_user= $this->users->get_user_by_id($uid,true);
+            
+            if ($receiver_user==null || $sender_user==null){
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Receiver or Sender does not exist";
+                echo json_encode($result);
+                return;
+            }
+                            
+            $inbox_id=$this->cars->add_message_car($_REQUEST['uid'],$_REQUEST['r_id'],$_REQUEST['msg'],"inbox");
+            $outbox_id=$this->cars->add_message_car($_REQUEST['uid'],$_REQUEST['r_id'],$_REQUEST['msg'],"outbox");
+            
+            $result['status'] = $this->config->item('success');             
+            $result['outbox_id'] = $outbox_id;
             
             //********************send mail function*******************
           
@@ -531,8 +629,7 @@ class Car extends CI_Controller
                         
             $result["mailsent"]=$okmail;*/
             
-            $receiver_user= $this->users->get_user_by_id($r_id,true);
-            $sender_user= $this->users->get_user_by_id($uid,true);
+            
             
              $ch = curl_init();
                
@@ -613,17 +710,37 @@ class Car extends CI_Controller
             
              if (!$this->check_car_session())
                 return;
-             
-             if( !isset($_REQUEST['s_id']) || $_REQUEST['s_id']=="" || !isset($_REQUEST['r_id']) || $_REQUEST['r_id']==""){
-                $result['status'] = $this->config->item('fail');
+              $result['status'] = $this->config->item('fail');
+             if( !isset($_REQUEST['s_id']) || $_REQUEST['s_id']=="" || 
+                     !isset($_REQUEST['r_id']) || $_REQUEST['r_id']=="" || 
+                     !isset($_REQUEST['type'])    ){
+               
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
+                                    
+            if ( $_REQUEST['type']!="inbox" && $_REQUEST['type']!="outbox"){
             
-            $uid=$_REQUEST['uid']; $s_id=$_REQUEST['s_id']; $r_id=$_REQUEST['r_id'];
-            $result['status'] =$this->config->item('success');
+                $result['error'] = $this->config->item('invalid_params');
+                echo json_encode($result);
+                return;
+            }
+                    
+            $uid=$_REQUEST['uid']; $r_id=$_REQUEST['r_id']; $s_id=$_REQUEST['s_id']; $type=$_REQUEST['type']; 
             
+            if ($type=="inbox" && $uid!=$r_id){
+                $result['error'] = "Receiver should be current user";
+                echo json_encode($result);
+                return;
+            }
+            
+            if ($type=="outbox" && $uid!=$s_id){
+                $result['error'] = "Sender should be current user";
+                echo json_encode($result);
+                return;
+            }
+                            
             if( !isset($_REQUEST['number']) || $_REQUEST['number']==""){                
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
@@ -636,10 +753,11 @@ class Car extends CI_Controller
                 return;
             }
             
+            $result['status'] =$this->config->item('success');
             $number=$_REQUEST['number'];
             $offset=$_REQUEST['offset'];
             
-            $result['msgs']= $this->cars->list_message_car($s_id, $r_id, $number, $offset);
+            $result['msgs']= $this->cars->list_message_car($s_id, $r_id, $number, $offset, $type);
             
             echo json_encode($result);            
         }
@@ -648,21 +766,52 @@ class Car extends CI_Controller
          * @uid : user id
          * @sid : session id
          * @msg_id : message id  
+         * @type : inbox, outbox
          */
          function remove_message_car() {    	
             
              if (!$this->check_car_session())
                 return;
             
-             if( !isset($_REQUEST['msg_id'])){
+             if( !isset($_REQUEST['msg_id']) || !isset($_REQUEST['type']) ||  $_REQUEST['type']=="" ){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
+            
+            if ( $_REQUEST['type']!="inbox" && $_REQUEST['type']!="outbox"){
+            
+                $result['error'] = $this->config->item('invalid_params');
+                echo json_encode($result);
+                return;
+            }
                 
-            $msg_id=$_REQUEST['msg_id']; $uid=$_REQUEST['uid'];
-            $this->cars->remove_message_car_by_id($msg_id);         
+            $msg_id=$_REQUEST['msg_id']; $uid=$_REQUEST['uid']; $type=$_REQUEST['type'];            
+            $msg=$this->cars->get_message_by_id($msg_id,$type);
+            
+            if ( $msg==null){
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Message doesn't exist.";
+                echo json_encode($result);
+                return;
+            }
+            
+            if ( $type=="inbox" && $uid!=$msg->receiver_id ){
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Receiver should be current user.";
+                echo json_encode($result);
+                return;
+            }
+            
+            if ( $type=="outbox" && $uid!=$msg->sender_id ){
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Receiver should be current user.";
+                echo json_encode($result);
+                return;
+            }
+            
+            $this->cars->remove_message_car_by_id($msg_id,$type);
             
             $result['status'] = $this->config->item('success');
             echo json_encode($result);
@@ -691,7 +840,16 @@ class Car extends CI_Controller
             else
                 $msg=$_REQUEST['msg'];
             $uid=$_REQUEST['uid']; $cid=$_REQUEST['cid'];
-            $offer_id=$this->cars->add_offer_car($_REQUEST['uid'],$_REQUEST['cid'],$_REQUEST['price'],$msg);
+            
+            $car=$this->cars->get_car_by_id($cid);
+            if ( $car==null )   {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Car doesn't exist";
+                echo json_encode($result);
+                return;
+            }
+            
+            $offer_id=$this->cars->add_offer_car($uid,$cid,$_REQUEST['price'],$msg);
             
             $result['status'] = $this->config->item('success');
             $result['offer_id'] = $offer_id;
@@ -709,25 +867,31 @@ class Car extends CI_Controller
             
              if (!$this->check_car_session())
                 return;
+             $result['status'] = $this->config->item('fail');
              
-             if( !isset($_REQUEST['cid']) || $_REQUEST['cid']==""){
-                $result['status'] = $this->config->item('fail');
+             if( !isset($_REQUEST['cid']) || $_REQUEST['cid']=="" || !isset($_REQUEST['o_id']) || $_REQUEST['o_id']==""){                
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            $uid=$_REQUEST['uid']; $cid=$_REQUEST['cid']; 
-                        
+            $uid=$_REQUEST['uid']; $cid=$_REQUEST['cid']; $o_id=$_REQUEST['o_id']; 
+            // $cid==-1 -> search by user $uid -> Not -1
+            // $cid!=-1 -> search by car and s_id=uid
+            
+            if ($cid==-1 && $o_id!=$uid ){            
+                $result['error'] = "Offering user should be current user.";
+                echo json_encode($result);
+                return;
+            }                        
+            
             if( !isset($_REQUEST['number']) || $_REQUEST['number']==""){
-                
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
             
-            if( !isset($_REQUEST['offset']) || $_REQUEST['offset']==""){
-                
+            if( !isset($_REQUEST['offset']) || $_REQUEST['offset']==""){                
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
@@ -737,7 +901,7 @@ class Car extends CI_Controller
             $offset=$_REQUEST['offset'];
             
             $result['status'] = $this->config->item('success');
-            $result['offers']= $this->cars->list_offer_car($cid, $number, $offset);
+            $result['offers']= $this->cars->list_offer_car($o_id, $cid, $number, $offset);
             
             echo json_encode($result);            
         }
@@ -760,6 +924,15 @@ class Car extends CI_Controller
             }
                 
             $offer_id=$_REQUEST['offer_id']; $uid=$_REQUEST['uid'];
+                        
+            $offer=$this->cars->get_offer_by_id($offer_id);
+            if ( ($offer==null) || $offer->uid!=$uid)  {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Offer doesn't exist or not correct owner";
+                echo json_encode($result);
+                return;
+            }
+            
             $this->cars->remove_offer_car_by_id($offer_id);
             
             $result['status'] =$this->config->item('success');;

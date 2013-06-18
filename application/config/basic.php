@@ -10,8 +10,11 @@
                 'admin\offer'	=>	'Offers',
                 'admin\comment'	=>	'Comments',
                 'admin\watch'	=>	'Watches',
-                
+                'admin\make'	=>	'Makes',
+                'admin\model'	=>	'Models',
+                'admin\saved_search' =>	'Saved Searches',
 	);
+        
         $config['max_count_per_page'] = 10;	
         $config['duplicate_mail'] = "Email address already exist";
         $config['login_success']="0";

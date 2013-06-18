@@ -9,6 +9,9 @@ class Car extends CI_Controller
 		$this->load->library('security');
 		$this->load->library('tank_auth');
 		$this->load->model('cars');
+                $this->load->model('makes');
+                $this->load->model('models');
+                $this->load->model('saved_searches');
                 $this->load->helper('url');
                 $this->load->helper('email');
                 $this->load->model('manage_m'); // a little different
@@ -207,13 +210,13 @@ class Car extends CI_Controller
         /*
          * 
          */
-         private function check_car_session() {    	
+         public function check_car_session($is_echo=true) {    	
             if (!isset($_REQUEST['uid']) || !isset($_REQUEST['sid'])  )
             {
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
-                echo json_encode($result);
-                return;
+                if ($is_echo==true) echo json_encode($result);
+                return false;
             } 
             
             $uid=$_REQUEST['uid'];
@@ -222,9 +225,8 @@ class Car extends CI_Controller
             if (!is_numeric ($uid) || !$this->tank_auth->is_valid_session($uid,$sid)){
                 $result['status'] = $this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_session');
-                echo json_encode($result);
-                return;
-                return false;
+                if ($is_echo==true) echo json_encode($result);
+                return false;                
             }
             return true;            
 				
@@ -328,7 +330,8 @@ class Car extends CI_Controller
                 echo json_encode($result);
                 return;
             }
-                            
+                       
+            $result['status'] = $this->config->item('success');
             $number=$_REQUEST['number'];
             $offset=$_REQUEST['offset'];
             $showall=1; //by default show all cars for all users 
@@ -413,8 +416,7 @@ class Car extends CI_Controller
         }
         
          /*
-         * @uid : user id
-         * @sid : session id
+         
           * @make : car make
           * @model : model
           * @price : price
@@ -425,9 +427,11 @@ class Car extends CI_Controller
          */
          function a_search() {    	// advanced search
             
-             if (!$this->check_car_session())
-                return;
-            
+             $is_admin=false;
+             if ($this->check_car_session(false)==true &&  $_REQUEST['uid']==ADMIN_USER_ID){                 
+                    $is_admin=true;
+             }
+                
             if( !isset($_REQUEST['number'])){
                 $result['status'] =$this->config->item('fail');          
                 $result['error'] = $this->config->item('invalid_params');
@@ -435,7 +439,7 @@ class Car extends CI_Controller
                 return;
             }
             
-            $uid=$_REQUEST['uid'];
+            
             $number=$_REQUEST['number'];
             $offset = (isset($_REQUEST['offset'])) ? $_REQUEST['offset'] : "";
             $make = (isset($_REQUEST['make'])) ? $_REQUEST['make'] : "";
@@ -457,9 +461,8 @@ class Car extends CI_Controller
                     
             }
             
-            
             $result['status'] = $this->config->item('success');
-            $result['cars']= $this->cars->a_search_list($make,$model,$s_price,$e_price,$pcode_obj,$radius,$number,$offset,$uid);
+            $result['cars']= $this->cars->a_search_list($make,$model,$s_price,$e_price,$pcode_obj,$radius,$number,$offset,$is_admin);
             
             echo json_encode($result);	
             
@@ -477,7 +480,7 @@ class Car extends CI_Controller
                 return;
             
              if( !isset($_REQUEST['cid']) || !isset($_REQUEST['comment'])){
-                $result['status'] = $this->config->item('success');              
+                $result['status'] = $this->config->item('fail');              
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
@@ -935,7 +938,7 @@ class Car extends CI_Controller
             
             $this->cars->remove_offer_car_by_id($offer_id);
             
-            $result['status'] =$this->config->item('success');;
+            $result['status'] =$this->config->item('success');
             echo json_encode($result);
         }
         
@@ -952,11 +955,12 @@ class Car extends CI_Controller
                 return;
             
              if( !isset($_REQUEST['pcodeA']) || !isset($_REQUEST['pcodeB'])){
-                $result['uid'] = "-1";
+                $result['status'] =$this->config->item('fail');
                 $result['error'] = $this->config->item('invalid_params');
                 echo json_encode($result);
                 return;
             }
+            $result['status'] =$this->config->item('success');
             $uid=$_REQUEST['uid'];
             $pcodeA=$_REQUEST['pcodeA']; $pcodeB=$_REQUEST['pcodeB'];
             $distance=$this->cars->calc_postcode_distance($pcodeA,$pcodeB);
@@ -967,6 +971,8 @@ class Car extends CI_Controller
             echo json_encode($result);
             return $distance;
         }
+        
+        
         
         
 }

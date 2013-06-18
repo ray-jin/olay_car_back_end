@@ -1,5 +1,5 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
-
+require_once 'car.php';
 
 class Api extends CI_Controller
 {
@@ -9,10 +9,14 @@ class Api extends CI_Controller
 
 		$this->load->library('security');
 		$this->load->library('tank_auth');
-		$this->load->model('manage_m');
+		$this->load->model('saved_searches');
+                $this->load->model('manage_m');
                 $this->load->model('manage_m/users');
                 $this->load->helper('url');
                 $this->load->model('cars');
+                $this->load->model('models');
+                $this->load->model('makes');
+                $this->load->model('saved_searches');
 	}
 	
 	function index()
@@ -389,6 +393,117 @@ class Api extends CI_Controller
             $result['status'] = $this->config->item('success');
             $result['postcodes']= $this->cars->list_postcodes();
                         
+            echo json_encode($result);            
+        }
+        
+        /*
+         * @uid : user id
+         * @sid : session id
+         * return the distance
+         */
+         function list_saved_searches() {    	
+             $car=  new Car();
+             
+             if (!$car->check_car_session())
+                return;
+                        
+            $result['status'] =$this->config->item('success');
+            $uid=$_REQUEST['uid'];
+            
+            $list= $this->saved_searches->list_saved_searches(0,1000,$uid);
+            $result['saved_strings']=$list['rows'];
+            echo json_encode($result);
+        }
+        
+        /*
+         * @uid : user id
+         * @sid : session id
+         * @query : query string
+         * return the distance
+         */
+         function add_saved_searches() {    	
+             $car=  new Car();
+             
+             if (!$car->check_car_session())
+                return;
+            
+             if( !isset($_REQUEST['query']) || !isset($_REQUEST['query'])){
+                $result['status'] = $this->config->item('fail');              
+                $result['error'] = $this->config->item('invalid_params');
+                echo json_encode($result);
+                return;
+            }
+             
+            $query=$_REQUEST['query'];                        
+            $uid=$_REQUEST['uid'];
+            
+            $new_id= $this->saved_searches->add_saved_searches($uid,$query);
+            
+            $result['status'] = $this->config->item('success');
+            $result['new_id'] = $new_id;
+            
+            echo json_encode($result);
+        }
+        
+        /*
+         * Remove saved search id
+         * 
+         */
+         function remove_saved_search() {    	
+            
+               $car=  new Car();
+             if (!$car->check_car_session())
+                return;
+            
+             if( !isset($_REQUEST['saved_search_id']) || $_REQUEST['saved_search_id']==""){
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = $this->config->item('invalid_params');
+                echo json_encode($result);
+                return;
+            }                
+            $uid=$_REQUEST['uid'];
+            $id=$_REQUEST['saved_search_id'];                         
+            
+            $ele = $this->saved_searches->get_specific_data($id);
+            if ( ($ele==null) || $ele['uid']!=$uid)  {
+                $result['status'] = $this->config->item('fail');
+                $result['error'] = "Saved Search item doesn't exist or not correct owner";
+                echo json_encode($result);
+                return;
+            }
+            
+            $this->saved_searches->remove_saved_searches($id);                               
+            $result['status'] = $this->config->item('success');
+            echo json_encode($result);				
+        }
+        
+         /*
+         * list all makes
+         * 
+         */
+         function list_makes() {           
+            $result['status'] =$this->config->item('success');            
+            $list= $this->makes->list_makes(0, 1000, "");
+            $result['makes']=$list['rows'];
+            echo json_encode($result);            
+        }
+        
+        /*
+         * list all makes
+         * @make_id : make id : -1 (for all)
+         */
+         function list_models() {           
+            
+             if( !isset($_REQUEST['make_id']) || $_REQUEST['make_id']=="" ){               
+                $result['error'] = $this->config->item('invalid_params');
+                $result['status'] = $this->config->item('fail');
+                echo json_encode($result);
+                return;
+            }
+            $make_id=$_REQUEST['make_id'];
+            $result['status'] =$this->config->item('success');            
+            $list= $this->models->list_all_models_by_maker_id($make_id);
+            $result['makes']=$list['rows'];
             echo json_encode($result);            
         }
 	

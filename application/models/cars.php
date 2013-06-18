@@ -420,11 +420,11 @@ class Cars extends CI_Model
                     'transmission' => $row->transmission,
                     'mileage' => $row->mileage,
                     'price' => $row->price,
-                    'postcode' => $row->postcode,
-                    'file_url_1' => HOST.UPLOAD_PATH. $row->file_url_1,
+                    'postcode' => $row->postcode,                    
                     'desc' => $row->desc,
                     );
-                
+                  $file_list=$this->list_car_files($row->id);
+                  $list[$i]['files']=$file_list;
                 $i++;
                 
             }
@@ -458,13 +458,16 @@ class Cars extends CI_Model
                     'transmission' => $row->transmission,
                     'mileage' => $row->mileage,
                     'price' => $row->price,
-                    'postcode' => $row->postcode,
-                    'file_url_1' => $row->file_url_1,
-                    'desc' => $row->desc,
-                    
-                    );
+                    'postcode' => $row->postcode,                    
+                    'desc' => $row->desc,                    
+                    );            
+                            
+                    $file_list=$this->list_car_files($row->id);
+                    $list[$i]['files']=$file_list;
+               
                 $i++;
             }
+            
             
             return $list;
            
@@ -480,13 +483,13 @@ class Cars extends CI_Model
          * @price : price
          * @loc : current postal code
 	 */
-	function a_search_list($make,$model,$s_price,$e_price,$pcode_obj,$radius,$number,$offset,$user_id)
+	function a_search_list($make,$model,$s_price,$e_price,$pcode_obj,$radius,$number,$offset,$is_admin)
 	{
             //get postal code from post code tables
             $list=array();
             
             $strSql = "select id, uid, make, model, activated, registration, year, fuel_type, transmission, mileage,"
-                ." price, postcode, file_url_1, file_url_2, file_url_3, file_url_4, file_url_5, created ";
+                ." price, postcode,  created ";
              if ($pcode_obj!=null){
                  $strSql.= " ,calc_distance($pcode_obj->Grid_N,$pcode_obj->Grid_E,`postcode`) dist ";
              }
@@ -508,7 +511,7 @@ class Cars extends CI_Model
                  $strSql.=" and price <= $e_price ";
              }
              
-             if ($user_id!=ADMIN_USER_ID)
+             if ($is_admin==false)
                 $strSql.=" and activated=1 ";               
                
             
@@ -525,18 +528,12 @@ class Cars extends CI_Model
             $list = $query->result_array();
             $i=0;
             
+            
             foreach ($list as $row)
             {                
-                if ($row['file_url_1']!="")
-                    $list[$i]['file_url_1']=HOST.UPLOAD_PATH.$row['file_url_1'];
-                if ($row['file_url_2']!="")
-                    $list[$i]['file_url_2']=HOST.UPLOAD_PATH.$row['file_url_2'];
-                if ($row['file_url_3']!="")
-                    $list[$i]['file_url_3']=HOST.UPLOAD_PATH.$row['file_url_3'];
-                if ($row['file_url_4']!="")
-                    $list[$i]['file_url_4']=HOST.UPLOAD_PATH.$row['file_url_4'];
-                if ($row['file_url_5']!="")
-                    $list[$i]['file_url_5']=HOST.UPLOAD_PATH.$row['file_url_5'];
+                $file_list=$this->list_car_files($row['id']);
+                $list[$i]['files']=$file_list;
+               
                 $i++;
             }
         
@@ -656,6 +653,39 @@ class Cars extends CI_Model
                 $list[$i] = array( 'msg_id' => $row->id,
                         'msg' => $row->message,
                     'c_date' => $row->created,
+                );
+                
+                $i++;                
+            }            
+            return $list;           
+	}
+        
+        /**
+	 * get list of messages watched by users for a specific car
+         * @s_id  : sender user id
+         * @r_id  : receiver user id
+         * @number : number of messages
+         * @offset : offset of message
+	 * @return	array
+	 */
+	 function list_car_files($cid)
+	{            
+            $this->db->where('cid', $cid);
+            $this->db->order_by('id', "asc");
+            $query = $this->db->get("file_loc");
+            
+            $list=array(); $i=0;
+            foreach ($query->result() as $row)
+            {
+                
+                if ($row->type==1){  //type=1 : image
+                    $full_url=HOST.UPLOAD_PATH.$row->url;
+                }
+                else{
+                    $full_url=$row->url;
+                }
+                $list[$i] = array( 'type' => $row->type,
+                        'url' => $full_url,
                 );
                 
                 $i++;                
